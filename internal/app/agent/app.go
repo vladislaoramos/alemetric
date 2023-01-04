@@ -1,8 +1,10 @@
 package agent
 
 import (
+	"github.com/go-resty/resty/v2"
 	"github.com/vladislaoramos/alemetric/configs"
 	"github.com/vladislaoramos/alemetric/pkg/log"
+	"net"
 	"os"
 	"os/signal"
 	"syscall"
@@ -14,9 +16,11 @@ func Run(cfg *configs.Config) {
 
 	metrics := NewMetrics()
 
-	webAPI := NewAPI(l, cfg.Agent.Host, cfg.Agent.Port)
+	client := resty.New().SetBaseURL("http://" + net.JoinHostPort(cfg.Agent.Host, cfg.Agent.Port))
 
-	worker := NewWorker(l, metrics, webAPI)
+	webAPI := NewAPI(client)
+
+	worker := NewWorker(l, metrics, cfg.MetricsNames, webAPI)
 
 	updateTicker := time.NewTicker(time.Duration(cfg.Agent.PollInterval) * time.Second)
 	go worker.UpdateMetrics(updateTicker)

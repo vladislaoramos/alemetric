@@ -10,8 +10,8 @@ import (
 type Metrics struct {
 	PollCount   entity.Counter
 	RandomValue entity.Gauge
-	mu          *sync.Mutex
 	*storage
+	mu *sync.Mutex
 }
 
 type storage struct {
@@ -56,12 +56,10 @@ func (m *Metrics) UpdateMetrics() {
 	runtime.ReadMemStats(memStats)
 
 	m.mu.Lock()
-	// defer m.mu.Unlock()
 	m.collectMetrics(memStats)
-	m.mu.Unlock()
-
-	m.RandomValue = entity.Gauge(rand.NormFloat64())
 	m.PollCount += 1
+	m.RandomValue = entity.Gauge(rand.Float64())
+	m.mu.Unlock()
 }
 
 func (m *Metrics) collectMetrics(memStats *runtime.MemStats) {

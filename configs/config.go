@@ -16,11 +16,12 @@ type Logger struct {
 }
 
 type Agent struct {
-	Name           string `yaml:"name"`
-	PollInterval   int64  `yaml:"pollInterval"`
-	ReportInterval int64  `yaml:"reportInterval"`
-	Host           string `yaml:"host"`
-	Port           string `yaml:"port"`
+	Name           string   `yaml:"name"`
+	PollInterval   int64    `yaml:"pollInterval"`
+	ReportInterval int64    `yaml:"reportInterval"`
+	Host           string   `yaml:"host"`
+	Port           string   `yaml:"port"`
+	MetricsNames   []string `yaml:"metricsNames"`
 }
 
 type Server struct {

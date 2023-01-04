@@ -3,6 +3,7 @@ package repo
 import (
 	"github.com/stretchr/testify/require"
 	"github.com/vladislaoramos/alemetric/internal/entity"
+	"sync"
 	"testing"
 )
 
@@ -29,6 +30,7 @@ func TestMetricRepo_StoreGauge(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			r := &MetricsRepo{
 				storage: tt.fields,
+				mu:      &sync.Mutex{},
 			}
 
 			err := r.StoreGaugeMetrics(tt.args.name, tt.args.value)

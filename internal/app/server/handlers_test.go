@@ -13,6 +13,8 @@ type MetricsRepoMock struct{}
 
 func (m *MetricsRepoMock) StoreGaugeMetrics(string, entity.Gauge) error     { return nil }
 func (m *MetricsRepoMock) StoreCounterMetrics(string, entity.Counter) error { return nil }
+func (m *MetricsRepoMock) GetMetricsNames() []string                        { return nil }
+func (m *MetricsRepoMock) GetMetrics(string) (interface{}, error)           { return nil, nil }
 
 func TestUpdateMetricsHandler(t *testing.T) {
 	type args struct {
