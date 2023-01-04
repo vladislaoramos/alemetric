@@ -7,6 +7,7 @@ import (
 
 type Config struct {
 	Agent  `yaml:"agent"`
+	Server `yaml:"server"`
 	Logger `yaml:"logger"`
 }
 
@@ -16,11 +17,16 @@ type Logger struct {
 
 type Agent struct {
 	Name           string `yaml:"name"`
-	Version        string `yaml:"version"`
 	PollInterval   int64  `yaml:"pollInterval"`
 	ReportInterval int64  `yaml:"reportInterval"`
 	Host           string `yaml:"host"`
 	Port           string `yaml:"port"`
+}
+
+type Server struct {
+	Name string `yaml:"name"`
+	Host string `yaml:"host"`
+	Port string `yaml:"port"`
 }
 
 const configPath = "./configs/config.yml"

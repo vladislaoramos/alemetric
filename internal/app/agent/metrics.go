@@ -1,51 +1,47 @@
 package agent
 
 import (
+	"github.com/vladislaoramos/alemetric/internal/entity"
 	"math/rand"
 	"runtime"
 	"sync"
 )
 
-type (
-	gauge   float64
-	counter int64
-)
-
 type Metrics struct {
-	PollCount   counter
-	RandomValue gauge
+	PollCount   entity.Counter
+	RandomValue entity.Gauge
 	mu          *sync.Mutex
 	*storage
 }
 
 type storage struct {
-	Alloc         gauge
-	BuckHashSys   gauge
-	Frees         gauge
-	GCCPUFraction gauge
-	GCSys         gauge
-	HeapAlloc     gauge
-	HeapIdle      gauge
-	HeapInuse     gauge
-	HeapObjects   gauge
-	HeapReleased  gauge
-	HeapSys       gauge
-	LastGC        gauge
-	Lookups       gauge
-	MCacheInuse   gauge
-	MCacheSys     gauge
-	MSpanInuse    gauge
-	MSpanSys      gauge
-	Mallocs       gauge
-	NextGC        gauge
-	NumForcedGC   gauge
-	NumGC         gauge
-	OtherSys      gauge
-	PauseTotalNs  gauge
-	StackInuse    gauge
-	StackSys      gauge
-	Sys           gauge
-	TotalAlloc    gauge
+	Alloc         entity.Gauge
+	BuckHashSys   entity.Gauge
+	Frees         entity.Gauge
+	GCCPUFraction entity.Gauge
+	GCSys         entity.Gauge
+	HeapAlloc     entity.Gauge
+	HeapIdle      entity.Gauge
+	HeapInuse     entity.Gauge
+	HeapObjects   entity.Gauge
+	HeapReleased  entity.Gauge
+	HeapSys       entity.Gauge
+	LastGC        entity.Gauge
+	Lookups       entity.Gauge
+	MCacheInuse   entity.Gauge
+	MCacheSys     entity.Gauge
+	MSpanInuse    entity.Gauge
+	MSpanSys      entity.Gauge
+	Mallocs       entity.Gauge
+	NextGC        entity.Gauge
+	NumForcedGC   entity.Gauge
+	NumGC         entity.Gauge
+	OtherSys      entity.Gauge
+	PauseTotalNs  entity.Gauge
+	StackInuse    entity.Gauge
+	StackSys      entity.Gauge
+	Sys           entity.Gauge
+	TotalAlloc    entity.Gauge
 }
 
 func NewMetrics() *Metrics {
@@ -64,36 +60,36 @@ func (m *Metrics) UpdateMetrics() {
 	m.collectMetrics(memStats)
 	m.mu.Unlock()
 
-	m.RandomValue = gauge(rand.NormFloat64())
+	m.RandomValue = entity.Gauge(rand.NormFloat64())
 	m.PollCount += 1
 }
 
 func (m *Metrics) collectMetrics(memStats *runtime.MemStats) {
-	m.storage.Alloc = gauge(memStats.Alloc)
-	m.storage.BuckHashSys = gauge(memStats.BuckHashSys)
-	m.storage.Frees = gauge(memStats.Frees)
-	m.storage.GCCPUFraction = gauge(memStats.GCCPUFraction)
-	m.storage.GCSys = gauge(memStats.GCSys)
-	m.storage.HeapAlloc = gauge(memStats.HeapAlloc)
-	m.storage.HeapIdle = gauge(memStats.HeapIdle)
-	m.storage.HeapInuse = gauge(memStats.HeapInuse)
-	m.storage.HeapObjects = gauge(memStats.HeapObjects)
-	m.storage.HeapReleased = gauge(memStats.HeapReleased)
-	m.storage.HeapSys = gauge(memStats.HeapSys)
-	m.storage.LastGC = gauge(memStats.LastGC)
-	m.storage.Lookups = gauge(memStats.Lookups)
-	m.storage.MCacheInuse = gauge(memStats.MCacheInuse)
-	m.storage.MCacheSys = gauge(memStats.MCacheSys)
-	m.storage.MSpanInuse = gauge(memStats.MSpanInuse)
-	m.storage.MSpanSys = gauge(memStats.MSpanSys)
-	m.storage.Mallocs = gauge(memStats.Mallocs)
-	m.storage.NextGC = gauge(memStats.NextGC)
-	m.storage.NumForcedGC = gauge(memStats.NumForcedGC)
-	m.storage.NumGC = gauge(memStats.NumGC)
-	m.storage.OtherSys = gauge(memStats.OtherSys)
-	m.storage.PauseTotalNs = gauge(memStats.PauseTotalNs)
-	m.storage.StackInuse = gauge(memStats.StackInuse)
-	m.storage.StackSys = gauge(memStats.StackSys)
-	m.storage.Sys = gauge(memStats.Sys)
-	m.storage.TotalAlloc = gauge(memStats.TotalAlloc)
+	m.storage.Alloc = entity.Gauge(memStats.Alloc)
+	m.storage.BuckHashSys = entity.Gauge(memStats.BuckHashSys)
+	m.storage.Frees = entity.Gauge(memStats.Frees)
+	m.storage.GCCPUFraction = entity.Gauge(memStats.GCCPUFraction)
+	m.storage.GCSys = entity.Gauge(memStats.GCSys)
+	m.storage.HeapAlloc = entity.Gauge(memStats.HeapAlloc)
+	m.storage.HeapIdle = entity.Gauge(memStats.HeapIdle)
+	m.storage.HeapInuse = entity.Gauge(memStats.HeapInuse)
+	m.storage.HeapObjects = entity.Gauge(memStats.HeapObjects)
+	m.storage.HeapReleased = entity.Gauge(memStats.HeapReleased)
+	m.storage.HeapSys = entity.Gauge(memStats.HeapSys)
+	m.storage.LastGC = entity.Gauge(memStats.LastGC)
+	m.storage.Lookups = entity.Gauge(memStats.Lookups)
+	m.storage.MCacheInuse = entity.Gauge(memStats.MCacheInuse)
+	m.storage.MCacheSys = entity.Gauge(memStats.MCacheSys)
+	m.storage.MSpanInuse = entity.Gauge(memStats.MSpanInuse)
+	m.storage.MSpanSys = entity.Gauge(memStats.MSpanSys)
+	m.storage.Mallocs = entity.Gauge(memStats.Mallocs)
+	m.storage.NextGC = entity.Gauge(memStats.NextGC)
+	m.storage.NumForcedGC = entity.Gauge(memStats.NumForcedGC)
+	m.storage.NumGC = entity.Gauge(memStats.NumGC)
+	m.storage.OtherSys = entity.Gauge(memStats.OtherSys)
+	m.storage.PauseTotalNs = entity.Gauge(memStats.PauseTotalNs)
+	m.storage.StackInuse = entity.Gauge(memStats.StackInuse)
+	m.storage.StackSys = entity.Gauge(memStats.StackSys)
+	m.storage.Sys = entity.Gauge(memStats.Sys)
+	m.storage.TotalAlloc = entity.Gauge(memStats.TotalAlloc)
 }

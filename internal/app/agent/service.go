@@ -2,6 +2,7 @@ package agent
 
 import (
 	"fmt"
+	"github.com/vladislaoramos/alemetric/internal/entity"
 	"github.com/vladislaoramos/alemetric/pkg/log"
 	"net/http"
 )
@@ -28,7 +29,7 @@ func makeAddr(host, port string) string {
 	return "http://" + host + ":" + port + "/"
 }
 
-func (s *Service) SendGaugeMetric(metricName string, metricValue gauge) error {
+func (s *Service) SendGaugeMetric(metricName string, metricValue entity.Gauge) error {
 	addr := makeAddr(s.host, s.port)
 
 	request, err := http.NewRequest(
@@ -52,7 +53,7 @@ func (s *Service) SendGaugeMetric(metricName string, metricValue gauge) error {
 	return nil
 }
 
-func (s *Service) SendCounterMetric(metricName string, metricValue counter) error {
+func (s *Service) SendCounterMetric(metricName string, metricValue entity.Counter) error {
 	addr := makeAddr(s.host, s.port)
 
 	request, err := http.NewRequest(
