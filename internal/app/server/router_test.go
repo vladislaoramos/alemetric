@@ -3,7 +3,7 @@ package server
 import (
 	"errors"
 	"github.com/vladislaoramos/alemetric/internal/entity"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -110,7 +110,6 @@ func TestRouter(t *testing.T) {
 		r := chi.NewRouter()
 		NewRouter(r, tt.args)
 		ts := httptest.NewServer(r)
-		//defer ts.Close()
 
 		req, err := http.NewRequest(tt.method, ts.URL+tt.request, nil)
 		require.NoError(t, err)
@@ -118,11 +117,13 @@ func TestRouter(t *testing.T) {
 		resp, err := http.DefaultClient.Do(req)
 		require.NoError(t, err)
 
-		respBody, err := ioutil.ReadAll(resp.Body)
+		respBody, err := io.ReadAll(resp.Body)
 		require.NoError(t, err)
 
-		//defer resp.Body.Close()
 		body := string(respBody)
+
+		resp.Body.Close()
+		ts.Close()
 
 		require.Equal(t, tt.want.code, resp.StatusCode)
 		require.Equal(t, tt.want.body, body)
