@@ -9,29 +9,29 @@ import (
 )
 
 type Worker struct {
-	l            logger.LogInterface
+	webAPI       WebAPIAgent
 	metrics      *Metrics
 	metricsNames []string
-	webAPI       *Service
+	l            logger.LogInterface
 }
 
 func NewWorker(
 	l logger.LogInterface,
 	metrics *Metrics,
 	metricsNames []string,
-	webAPI *Service) *Worker {
+	webAPI WebAPIAgent) *Worker {
 	return &Worker{
 		l:            l,
 		metrics:      metrics,
-		webAPI:       webAPI,
 		metricsNames: metricsNames,
+		webAPI:       webAPI,
 	}
 }
 
 func (w *Worker) UpdateMetrics(ticker *time.Ticker) {
 	for {
 		<-ticker.C
-		w.metrics.UpdateMetrics()
+		w.metrics.CollectMetrics()
 		w.l.Info("metrics updated")
 	}
 }
@@ -40,19 +40,20 @@ func (w *Worker) SendMetrics(ticker *time.Ticker) {
 	for {
 		<-ticker.C
 
-		for _, mName := range w.metricsNames {
-			r := reflect.ValueOf(w.metrics)
-			f := reflect.Indirect(r).FieldByName(mName)
-			if !f.IsValid() {
-				w.l.Error(fmt.Sprintf("field `%s` is not valid", mName))
+		for _, name := range w.metricsNames {
+			//r := reflect.ValueOf(w.metrics)
+			value := reflect.Indirect(reflect.ValueOf(w.metrics)).FieldByName(name)
+			if !value.IsValid() {
+				w.l.Error(fmt.Sprintf("field `%s` is not valid", name))
 				continue
 			}
-			go func(metricName, metricType string, metricValue interface{}) {
-				err := w.webAPI.SendMetrics(metricName, metricType, metricValue)
+
+			go func(metricsName, metricsType string, metricsValue interface{}) {
+				err := w.webAPI.SendMetrics(metricsName, metricsType, metricsValue)
 				if err != nil {
 					w.l.Error(err.Error())
 				}
-			}(mName, strings.ToLower(f.Type().Name()), f)
+			}(name, strings.ToLower(value.Type().Name()), value)
 		}
 	}
 }

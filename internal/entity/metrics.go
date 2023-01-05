@@ -1,6 +1,7 @@
 package entity
 
 import (
+	"fmt"
 	"strconv"
 )
 
@@ -9,7 +10,7 @@ type (
 	Counter int64
 )
 
-type Metrics struct {
+type Metric struct {
 	Name  string
 	Value interface{}
 }
@@ -17,15 +18,16 @@ type Metrics struct {
 func ParseGaugeMetrics(value string) (Gauge, error) {
 	s, err := strconv.ParseFloat(value, 64)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("error with ParseGaugeMetrics: strconv.ParseFloat cannot parse: %w", err)
 	}
+
 	return Gauge(s), nil
 }
 
 func ParseCounterMetrics(value string) (Counter, error) {
 	s, err := strconv.Atoi(value)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("error with ParseCounterMetrics strconv.Atoi cannot parse: %w", err)
 	}
 	return Counter(s), nil
 }

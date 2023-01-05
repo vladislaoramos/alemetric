@@ -3,7 +3,7 @@ package agent
 import (
 	"github.com/go-resty/resty/v2"
 	"github.com/vladislaoramos/alemetric/configs"
-	"github.com/vladislaoramos/alemetric/pkg/log"
+	logger "github.com/vladislaoramos/alemetric/pkg/log"
 	"net"
 	"os"
 	"os/signal"
@@ -12,25 +12,25 @@ import (
 )
 
 func Run(cfg *configs.Config) {
-	l := logger.New(cfg.Logger.Level)
+	lgr := logger.New(cfg.Logger.Level)
 
 	metrics := NewMetrics()
 
 	client := resty.New().SetBaseURL("http://" + net.JoinHostPort(cfg.Agent.Host, cfg.Agent.Port))
 
-	webAPI := NewAPI(client)
+	webAPI := NewWebAPI(client)
 
-	worker := NewWorker(l, metrics, cfg.MetricsNames, webAPI)
+	worker := NewWorker(lgr, metrics, cfg.Agent.MetricsNames, webAPI)
 
-	updateTicker := time.NewTicker(time.Duration(cfg.Agent.PollInterval) * time.Second)
+	updateTicker := time.NewTicker(time.Second * time.Duration(cfg.Agent.PollInterval))
 	go worker.UpdateMetrics(updateTicker)
 
-	sendTicker := time.NewTicker(time.Duration(cfg.Agent.ReportInterval) * time.Second)
+	sendTicker := time.NewTicker(time.Second * time.Duration(cfg.Agent.ReportInterval))
 	go worker.SendMetrics(sendTicker)
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	stop := <-sigs
 
-	l.Info("agent got stop signal: " + stop.String())
+	lgr.Info("agent got stop signal: " + stop.String())
 }

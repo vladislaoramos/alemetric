@@ -1,5 +1,5 @@
 package agent
 
-type WebAgentAPI interface {
+type WebAPIAgent interface {
 	SendMetrics(string, string, interface{}) error
 }

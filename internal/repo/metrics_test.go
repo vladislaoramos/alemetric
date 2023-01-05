@@ -20,7 +20,7 @@ func TestMetricRepo_StoreGauge(t *testing.T) {
 		want   entity.Gauge
 	}{
 		{
-			name:   "simple test with success",
+			name:   "simple test with TotalAlloc",
 			fields: map[string]interface{}{},
 			args:   args{"TotalAlloc", 100.500},
 			want:   entity.Gauge(100.500),
@@ -30,9 +30,8 @@ func TestMetricRepo_StoreGauge(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			r := &MetricsRepo{
 				storage: tt.fields,
-				mu:      &sync.Mutex{},
+				Mu:      &sync.Mutex{},
 			}
-
 			err := r.StoreGaugeMetrics(tt.args.name, tt.args.value)
 			require.NoError(t, err)
 
@@ -43,7 +42,7 @@ func TestMetricRepo_StoreGauge(t *testing.T) {
 	}
 }
 
-func TestMetricRepo_StoreCounter(t *testing.T) {
+func TestMetricRepo_AddCounter(t *testing.T) {
 	type args struct {
 		name  string
 		value entity.Counter
@@ -56,22 +55,23 @@ func TestMetricRepo_StoreCounter(t *testing.T) {
 		want   entity.Counter
 	}{
 		{
-			name:   "simple add test with success #1",
-			fields: map[string]interface{}{"Total": entity.Counter(100)},
-			args:   args{"Total", 1},
-			want:   entity.Counter(101),
+			name:   "simple test with PollCount #1",
+			fields: map[string]interface{}{},
+			args:   args{"PollCount", 1},
+			want:   entity.Counter(1),
 		},
 		{
-			name:   "simple add test success #2",
-			fields: map[string]interface{}{},
-			args:   args{"Total", 1},
-			want:   entity.Counter(1),
+			name:   "simple test with PollCount #1",
+			fields: map[string]interface{}{"PollCount": entity.Counter(1)},
+			args:   args{"PollCount", 1},
+			want:   entity.Counter(2),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := &MetricsRepo{
 				storage: tt.fields,
+				Mu:      &sync.Mutex{},
 			}
 
 			err := r.StoreCounterMetrics(tt.args.name, tt.args.value)

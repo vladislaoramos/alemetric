@@ -6,28 +6,26 @@ import (
 	"net/http"
 )
 
-type Service struct {
+type WebAPIClient struct {
 	client *resty.Client
 }
 
-func NewAPI(client *resty.Client) *Service {
-	return &Service{
+func NewWebAPI(client *resty.Client) *WebAPIClient {
+	return &WebAPIClient{
 		client: client,
 	}
 }
 
-func (s *Service) SendMetrics(metricsName, metricsType string, metricsValue interface{}) error {
-	resp, err := s.client.
-		R().
-		SetHeader("Content-Type", "text/plain").
-		Post(
-			fmt.Sprintf("/update/%s/%s/%v", metricsType, metricsName, metricsValue),
-		)
+func (wc *WebAPIClient) SendMetrics(metricsName, metricsType string, metricsValue interface{}) error {
+	resp, err := wc.client.R().SetHeader("Content-Type", "text/plain").
+		Post(fmt.Sprintf("/update/%s/%s/%v", metricsType, metricsName, metricsValue))
 	if err != nil {
-		return fmt.Errorf("cant't send metrics: %w", err)
+		return fmt.Errorf("cannot send metrics because of error: %w", err)
 	}
+
 	if resp.StatusCode() != http.StatusOK {
-		return fmt.Errorf("cant't send metrics. Status code <> 200")
+		return fmt.Errorf("cannot send metrics because of status code != 200")
 	}
+
 	return nil
 }
