@@ -1,3 +1,15 @@
 package main
 
-func main() {}
+import (
+	"github.com/vladislaoramos/alemetric/configs"
+	"github.com/vladislaoramos/alemetric/internal/app/agent"
+	"log"
+)
+
+func main() {
+	cfg, err := configs.NewConfig()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	agent.Run(cfg)
+}
