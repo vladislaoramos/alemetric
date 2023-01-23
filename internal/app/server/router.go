@@ -16,14 +16,10 @@ const (
 )
 
 func NewRouter(handler *chi.Mux, repo MetricsRepo) {
-	// Options
 	handler.Use(middleware.RequestID)
 	handler.Use(middleware.RealIP)
 	handler.Use(middleware.Logger)
 	handler.Use(middleware.Recoverer)
-
-	// checker
-	// handler.Get("/healthz", func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusOK) })
 
 	handler.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		_, err := io.WriteString(w, strings.Join(repo.GetMetricsNames(), "\n"))
@@ -32,7 +28,7 @@ func NewRouter(handler *chi.Mux, repo MetricsRepo) {
 		}
 	})
 
-	// updater
+	// update
 	handler.Route("/update", func(r chi.Router) {
 		r.Post(
 			"/{metricType}/{metricName}/{metricValue}",

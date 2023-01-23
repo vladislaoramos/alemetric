@@ -61,7 +61,6 @@ func (m *Metrics) CollectMetrics() {
 	m.updateMetrics(memStats)
 	m.PollCount += 1
 	m.RandomValue = entity.Gauge(rand.Float64())
-	// m.Mu.Unlock()
 }
 
 func (m *Metrics) updateMetrics(memStats *runtime.MemStats) {

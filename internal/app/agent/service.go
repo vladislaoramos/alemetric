@@ -23,8 +23,9 @@ func (wc *WebAPIClient) SendMetrics(metricsName, metricsType string, metricsValu
 		return fmt.Errorf("cannot send metrics because of error: %w", err)
 	}
 
-	if resp.StatusCode() != http.StatusOK {
-		return fmt.Errorf("cannot send metrics because of status code != 200")
+	status := resp.StatusCode()
+	if status != http.StatusOK {
+		return fmt.Errorf("error sending metrics with status code: %d", status)
 	}
 
 	return nil
