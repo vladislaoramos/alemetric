@@ -10,11 +10,6 @@ type (
 	Counter int64
 )
 
-type Metric struct {
-	Name  string
-	Value interface{}
-}
-
 type Metrics struct {
 	ID    string   `json:"id"`              // имя метрики
 	MType string   `json:"type"`            // параметр, принимающий значение gauge или counter
@@ -37,4 +32,12 @@ func ParseCounterMetrics(value string) (Counter, error) {
 		return 0, fmt.Errorf("error with ParseCounterMetrics strconv.Atoi cannot parse: %w", err)
 	}
 	return Counter(s), nil
+}
+
+func (g Gauge) Type() string {
+	return "gauge"
+}
+
+func (c Counter) Type() string {
+	return "counter"
 }

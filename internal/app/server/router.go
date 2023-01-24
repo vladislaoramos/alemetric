@@ -6,6 +6,8 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/vladislaoramos/alemetric/internal/entity"
+	"github.com/vladislaoramos/alemetric/internal/usecase"
+	"github.com/vladislaoramos/alemetric/pkg/log"
 	"io"
 	"net/http"
 	"strings"
@@ -16,16 +18,22 @@ const (
 	Counter = "counter"
 )
 
-func NewRouter(handler *chi.Mux, repo MetricsRepo) {
+func NewRouter(handler *chi.Mux, tool *usecase.ToolUseCase, l logger.LogInterface) {
 	handler.Use(middleware.RequestID)
 	handler.Use(middleware.RealIP)
 	handler.Use(middleware.Logger)
 	handler.Use(middleware.Recoverer)
 
 	handler.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		_, err := io.WriteString(w, strings.Join(repo.GetMetricsNames(), "\n"))
+		names, err := tool.GetMetricsNames()
 		if err != nil {
-			panic(err)
+			errorHandler(w, err)
+			return
+		}
+		_, err = io.WriteString(w, strings.Join(names, "\n"))
+		if err != nil {
+			errorHandler(w, err)
+			return
 		}
 	})
 
@@ -40,15 +48,10 @@ func NewRouter(handler *chi.Mux, repo MetricsRepo) {
 					return
 				}
 
-				switch metrics.MType {
-				case Counter:
-					if err := repo.StoreCounterMetrics(metrics.ID, *metrics.Delta); err != nil {
-						http.Error(w, "some problem with storage", http.StatusInternalServerError)
-					}
-				case Gauge:
-					if err := repo.StoreGaugeMetrics(metrics.ID, *metrics.Value); err != nil {
-						http.Error(w, "some problem with storage", http.StatusInternalServerError)
-					}
+				if err := tool.StoreMetrics(metrics); err != nil {
+					l.Error(err.Error())
+					errorHandler(w, err)
+					return
 				}
 
 				w.WriteHeader(http.StatusOK)
@@ -65,26 +68,45 @@ func NewRouter(handler *chi.Mux, repo MetricsRepo) {
 				case Gauge:
 					value, err := entity.ParseGaugeMetrics(metricsValue)
 					if err != nil {
-						http.Error(w, "bad value type", http.StatusBadRequest)
-						return
+						l.Error(err.Error())
+						http.Error(w, "parsing error", http.StatusBadRequest)
 					}
-					err = repo.StoreGaugeMetrics(metricsName, value)
+
+					metrics := entity.Metrics{
+						ID:    metricsName,
+						MType: value.Type(),
+						Value: &value,
+					}
+
+					err = tool.StoreMetrics(metrics)
 					if err != nil {
-						http.Error(w, "some problem with storage", http.StatusInternalServerError)
+						l.Error(err.Error())
+						errorHandler(w, err)
+						return
 					}
 				case Counter:
 					value, err := entity.ParseCounterMetrics(metricsValue)
 					if err != nil {
-						http.Error(w, "bad value type", http.StatusBadRequest)
-						return
+						l.Error(err.Error())
+						http.Error(w, "parsing error", http.StatusBadRequest)
 					}
-					err = repo.StoreCounterMetrics(metricsName, value)
+
+					metrics := entity.Metrics{
+						ID:    metricsName,
+						MType: value.Type(),
+						Delta: &value,
+					}
+
+					err = tool.StoreMetrics(metrics)
 					if err != nil {
-						http.Error(w, "some problem with storage", http.StatusInternalServerError)
+						l.Error(err.Error())
+						errorHandler(w, err)
+						return
 					}
 				default:
 					http.Error(w, "metrics type is not found", http.StatusNotImplemented)
 				}
+
 				w.WriteHeader(http.StatusOK)
 			},
 		)
@@ -101,26 +123,20 @@ func NewRouter(handler *chi.Mux, repo MetricsRepo) {
 					return
 				}
 
-				value, err := repo.GetMetrics(metrics.ID)
+				value, err := tool.GetMetrics(metrics)
 				if err != nil {
-					http.Error(w, "metrics not found", http.StatusNotFound)
+					l.Error(err.Error())
+					errorHandler(w, err)
 					return
 				}
 
-				switch metrics.MType {
-				case Counter:
-					curVal := value.(entity.Counter)
-					metrics.Delta = &curVal
-				case Gauge:
-					curVal := value.(entity.Gauge)
-					metrics.Value = &curVal
-				}
-
-				resp, err := json.Marshal(metrics)
+				resp, err := json.Marshal(value)
 				if err != nil {
-					http.Error(w, "server error", http.StatusInternalServerError)
+					l.Error(err.Error())
+					errorHandler(w, err)
 					return
 				}
+
 				w.Header().Set("Content-Type", "application/json")
 				w.Write(resp)
 			},
@@ -129,21 +145,23 @@ func NewRouter(handler *chi.Mux, repo MetricsRepo) {
 			metricsType := chi.URLParam(r, "metricsType")
 			metricsName := chi.URLParam(r, "metricsName")
 
+			metrics := entity.Metrics{
+				ID:    metricsName,
+				MType: metricsType,
+			}
+
+			res, err := tool.GetMetrics(metrics)
+			if err != nil {
+				l.Error(err.Error())
+				http.Error(w, "metrics is not found", http.StatusNotFound)
+				return
+			}
+
 			switch metricsType {
 			case Gauge:
-				value, err := repo.GetMetrics(metricsName)
-				if err != nil {
-					http.Error(w, "metrics is not found", http.StatusNotFound)
-					return
-				}
-				w.Write([]byte(fmt.Sprintf("%g", value)))
+				w.Write([]byte(fmt.Sprintf("%g", *res.Value)))
 			case Counter:
-				value, err := repo.GetMetrics(metricsName)
-				if err != nil {
-					http.Error(w, "metrics is not found", http.StatusNotFound)
-					return
-				}
-				w.Write([]byte(fmt.Sprintf("%d", value)))
+				w.Write([]byte(fmt.Sprintf("%d", *res.Delta)))
 			default:
 				http.Error(w, "metrics type is not found", http.StatusNotImplemented)
 			}

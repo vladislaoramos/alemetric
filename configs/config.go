@@ -25,8 +25,11 @@ type Agent struct {
 }
 
 type Server struct {
-	Name    string `yaml:"name"`
-	Address string `yaml:"address" env:"ADDRESS"`
+	Name          string        `yaml:"name"`
+	Address       string        `yaml:"address" env:"ADDRESS"`
+	StoreInterval time.Duration `yaml:"storeInterval" env:"STORE_INTERVAL"`
+	StoreFile     string        `yaml:"storeFile" env:"STORE_FILE"`
+	Restore       bool          `yaml:"restore" env:"RESTORE"`
 }
 
 const configPath = "./configs/config.yml"
