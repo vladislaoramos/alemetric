@@ -1,6 +1,7 @@
 package configs
 
 import (
+	"flag"
 	"fmt"
 	"github.com/ilyakaznacheev/cleanenv"
 	"time"
@@ -47,4 +48,19 @@ func NewConfig() (*Config, error) {
 	}
 
 	return cfg, nil
+}
+
+func Init(cfg *Config) error {
+	err := cleanenv.ReadConfig(configPath, cfg)
+	if err != nil {
+		return fmt.Errorf("error reading config: %s", err.Error())
+	}
+
+	flag.Parse()
+
+	if err = cleanenv.ReadEnv(cfg); err != nil {
+		return fmt.Errorf("error setting envs: %w", err)
+	}
+
+	return nil
 }
