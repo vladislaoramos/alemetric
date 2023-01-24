@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -31,30 +32,53 @@ func NewRouter(handler *chi.Mux, repo MetricsRepo) {
 	// update
 	handler.Route("/update", func(r chi.Router) {
 		r.Post(
-			"/{metricType}/{metricName}/{metricValue}",
+			"/",
 			func(w http.ResponseWriter, r *http.Request) {
-				metricType := chi.URLParam(r, "metricType")
-				metricName := chi.URLParam(r, "metricName")
-				metricValue := chi.URLParam(r, "metricValue")
+				var metrics entity.Metrics
+				if err := json.NewDecoder(r.Body).Decode(&metrics); err != nil {
+					http.Error(w, "error with updating metrics", http.StatusBadRequest)
+					return
+				}
 
-				switch metricType {
+				switch metrics.MType {
+				case Counter:
+					if err := repo.StoreCounterMetrics(metrics.ID, *metrics.Delta); err != nil {
+						http.Error(w, "some problem with storage", http.StatusInternalServerError)
+					}
 				case Gauge:
-					value, err := entity.ParseGaugeMetrics(metricValue)
+					if err := repo.StoreGaugeMetrics(metrics.ID, *metrics.Value); err != nil {
+						http.Error(w, "some problem with storage", http.StatusInternalServerError)
+					}
+				}
+
+				w.WriteHeader(http.StatusOK)
+			},
+		)
+		r.Post(
+			"/{metricsType}/{metricsName}/{metricsValue}",
+			func(w http.ResponseWriter, r *http.Request) {
+				metricsType := chi.URLParam(r, "metricsType")
+				metricsName := chi.URLParam(r, "metricsName")
+				metricsValue := chi.URLParam(r, "metricsValue")
+
+				switch metricsType {
+				case Gauge:
+					value, err := entity.ParseGaugeMetrics(metricsValue)
 					if err != nil {
 						http.Error(w, "bad value type", http.StatusBadRequest)
 						return
 					}
-					err = repo.StoreGaugeMetrics(metricName, value)
+					err = repo.StoreGaugeMetrics(metricsName, value)
 					if err != nil {
 						http.Error(w, "some problem with storage", http.StatusInternalServerError)
 					}
 				case Counter:
-					value, err := entity.ParseCounterMetrics(metricValue)
+					value, err := entity.ParseCounterMetrics(metricsValue)
 					if err != nil {
 						http.Error(w, "bad value type", http.StatusBadRequest)
 						return
 					}
-					err = repo.StoreCounterMetrics(metricName, value)
+					err = repo.StoreCounterMetrics(metricsName, value)
 					if err != nil {
 						http.Error(w, "some problem with storage", http.StatusInternalServerError)
 					}
@@ -68,20 +92,53 @@ func NewRouter(handler *chi.Mux, repo MetricsRepo) {
 
 	// value
 	handler.Route("/value", func(r chi.Router) {
-		r.Get("/{metricType}/{metricName}", func(w http.ResponseWriter, r *http.Request) {
-			metricType := chi.URLParam(r, "metricType")
-			metricName := chi.URLParam(r, "metricName")
+		r.Post(
+			"/",
+			func(w http.ResponseWriter, r *http.Request) {
+				var metrics entity.Metrics
+				if err := json.NewDecoder(r.Body).Decode(&metrics); err != nil {
+					http.Error(w, "error with getting metrics", http.StatusBadRequest)
+					return
+				}
 
-			switch metricType {
+				value, err := repo.GetMetrics(metrics.ID)
+				if err != nil {
+					http.Error(w, "metrics not found", http.StatusNotFound)
+					return
+				}
+
+				switch metrics.MType {
+				case Counter:
+					curVal := value.(entity.Counter)
+					metrics.Delta = &curVal
+				case Gauge:
+					curVal := value.(entity.Gauge)
+					metrics.Value = &curVal
+				}
+
+				resp, err := json.Marshal(metrics)
+				if err != nil {
+					http.Error(w, "server error", http.StatusInternalServerError)
+					return
+				}
+				w.Header().Set("Content-Type", "application/json")
+				w.Write(resp)
+			},
+		)
+		r.Get("/{metricsType}/{metricsName}", func(w http.ResponseWriter, r *http.Request) {
+			metricsType := chi.URLParam(r, "metricsType")
+			metricsName := chi.URLParam(r, "metricsName")
+
+			switch metricsType {
 			case Gauge:
-				value, err := repo.GetMetrics(metricName)
+				value, err := repo.GetMetrics(metricsName)
 				if err != nil {
 					http.Error(w, "metrics is not found", http.StatusNotFound)
 					return
 				}
 				w.Write([]byte(fmt.Sprintf("%g", value)))
 			case Counter:
-				value, err := repo.GetMetrics(metricName)
+				value, err := repo.GetMetrics(metricsName)
 				if err != nil {
 					http.Error(w, "metrics is not found", http.StatusNotFound)
 					return

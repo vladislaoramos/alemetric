@@ -3,6 +3,7 @@ package agent
 import (
 	"fmt"
 	"github.com/go-resty/resty/v2"
+	"github.com/vladislaoramos/alemetric/internal/entity"
 	"net/http"
 )
 
@@ -16,9 +17,24 @@ func NewWebAPI(client *resty.Client) *WebAPIClient {
 	}
 }
 
-func (wc *WebAPIClient) SendMetrics(metricsName, metricsType string, metricsValue interface{}) error {
-	resp, err := wc.client.R().SetHeader("Content-Type", "text/plain").
-		Post(fmt.Sprintf("/update/%s/%s/%v", metricsType, metricsName, metricsValue))
+func (wc *WebAPIClient) SendMetrics(
+	metricsName,
+	metricsType string,
+	delta *entity.Counter,
+	value *entity.Gauge,
+) error {
+	body := entity.Metrics{
+		ID:    metricsName,
+		MType: metricsType,
+		Delta: delta,
+		Value: value,
+	}
+
+	resp, err := wc.client.
+		R().
+		SetHeader("Content-Type", "application/json").
+		SetBody(body).
+		Post("/update/")
 	if err != nil {
 		return fmt.Errorf("cannot send metrics because of error: %w", err)
 	}

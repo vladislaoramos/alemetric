@@ -1,6 +1,8 @@
 package server
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"github.com/vladislaoramos/alemetric/internal/entity"
 	"io"
@@ -127,5 +129,137 @@ func TestRouter(t *testing.T) {
 
 		require.Equal(t, tt.want.code, resp.StatusCode)
 		require.Equal(t, tt.want.body, body)
+	}
+}
+
+func TestRouterJSON(t *testing.T) {
+	type args struct {
+		repo    MetricsRepo
+		metrics entity.Metrics
+	}
+
+	type want struct {
+		code  int
+		value *entity.Gauge
+		delta *entity.Counter
+	}
+
+	var (
+		gaugeVal   = entity.Gauge(2.4)
+		counterVal = entity.Counter(2)
+	)
+
+	tests := []struct {
+		name    string
+		args    args
+		request string
+		method  string
+		want    want
+	}{
+		{
+			name: "simple test of updating gauge value with success",
+			args: args{
+				&MockMetricsRepo{},
+				entity.Metrics{
+					ID:    "TotalAlloc",
+					MType: "gauge",
+					Delta: nil,
+					Value: &gaugeVal,
+				},
+			},
+			method:  http.MethodPost,
+			request: "/update/",
+			want: want{
+				code:  200,
+				value: nil,
+				delta: nil,
+			},
+		},
+		{
+			name: "simple test of updating counter value with success",
+			args: args{
+				&MockMetricsRepo{},
+				entity.Metrics{
+					ID:    "NextGC",
+					MType: "counter",
+					Delta: &counterVal,
+					Value: nil},
+			},
+			method:  http.MethodPost,
+			request: "/update/",
+			want: want{
+				code:  200,
+				value: nil,
+				delta: nil,
+			},
+		},
+		{
+			name: "simple test of getting gauge value with success",
+			args: args{
+				&MockMetricsRepo{MockMetrics: gaugeVal},
+				entity.Metrics{
+					ID:    "TotalAlloc",
+					MType: "gauge",
+					Delta: nil,
+					Value: nil,
+				},
+			},
+			method:  http.MethodPost,
+			request: "/value/",
+			want: want{
+				code:  200,
+				value: &gaugeVal,
+				delta: nil,
+			},
+		},
+		{
+			name: "simple test of getting gauge value with error",
+			args: args{
+				&MockMetricsRepo{MockErr: errors.New("error")},
+				entity.Metrics{
+					ID:    "TotalAlloc",
+					MType: "gauge",
+					Delta: nil,
+					Value: nil,
+				},
+			},
+			method:  http.MethodPost,
+			request: "/value/",
+			want: want{
+				code:  404,
+				value: nil,
+				delta: nil,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		r := chi.NewRouter()
+		NewRouter(r, tt.args.repo)
+		ts := httptest.NewServer(r)
+
+		reqJSON, err := json.Marshal(tt.args.metrics)
+		require.NoError(t, err)
+
+		req, err := http.NewRequest(tt.method, ts.URL+tt.request, bytes.NewBuffer(reqJSON))
+		require.NoError(t, err)
+
+		resp, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+
+		require.Equal(t, tt.want.code, resp.StatusCode)
+
+		if tt.want.value != nil || tt.want.delta != nil {
+			var respJSON entity.Metrics
+
+			err = json.NewDecoder(resp.Body).Decode(&respJSON)
+			require.NoError(t, err)
+
+			require.Equal(t, respJSON.Value, tt.want.value)
+			require.Equal(t, respJSON.Delta, tt.want.delta)
+		}
+
+		ts.Close()
+		resp.Body.Close()
 	}
 }

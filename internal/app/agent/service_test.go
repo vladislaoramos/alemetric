@@ -1,6 +1,7 @@
 package agent
 
 import (
+	"github.com/vladislaoramos/alemetric/internal/entity"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -31,9 +32,9 @@ func TestNewWebAPI(t *testing.T) {
 
 func TestWebAPI_SendMetric(t *testing.T) {
 	type args struct {
-		metricName  string
-		metricType  string
-		metricValue interface{}
+		metricsName  string
+		metricsType  string
+		metricsValue float64
 	}
 
 	tests := []struct {
@@ -78,7 +79,9 @@ func TestWebAPI_SendMetric(t *testing.T) {
 
 			webAPI := &WebAPIClient{resty.New().SetBaseURL(serverURL)}
 
-			err := webAPI.SendMetrics(tt.args.metricName, tt.args.metricType, tt.args.metricValue)
+			val := entity.Gauge(tt.args.metricsValue)
+
+			err := webAPI.SendMetrics(tt.args.metricsName, tt.args.metricsType, nil, &val)
 			if !tt.wantErr {
 				return
 			}

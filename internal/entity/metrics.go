@@ -15,6 +15,13 @@ type Metric struct {
 	Value interface{}
 }
 
+type Metrics struct {
+	ID    string   `json:"id"`              // имя метрики
+	MType string   `json:"type"`            // параметр, принимающий значение gauge или counter
+	Delta *Counter `json:"delta,omitempty"` // значение метрики в случае передачи counter
+	Value *Gauge   `json:"value,omitempty"` // значение метрики в случае передачи gauge
+}
+
 func ParseGaugeMetrics(value string) (Gauge, error) {
 	s, err := strconv.ParseFloat(value, 64)
 	if err != nil {

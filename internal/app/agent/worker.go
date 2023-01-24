@@ -2,6 +2,7 @@ package agent
 
 import (
 	"fmt"
+	"github.com/vladislaoramos/alemetric/internal/entity"
 	"github.com/vladislaoramos/alemetric/pkg/log"
 	"reflect"
 	"strings"
@@ -41,18 +42,37 @@ func (w *Worker) SendMetrics(ticker *time.Ticker) {
 		<-ticker.C
 
 		for _, name := range w.metricsNames {
-			value := reflect.Indirect(reflect.ValueOf(w.metrics)).FieldByName(name)
-			if !value.IsValid() {
+			field := reflect.Indirect(reflect.ValueOf(w.metrics)).FieldByName(name)
+			if !field.IsValid() {
 				w.l.Error(fmt.Sprintf("field `%s` is not valid", name))
 				continue
 			}
 
-			go func(metricsName, metricsType string, metricsValue interface{}) {
-				err := w.webAPI.SendMetrics(metricsName, metricsType, metricsValue)
+			fieldType := strings.ToLower(field.Type().Name())
+
+			var (
+				valCounter *entity.Counter
+				valGauge   *entity.Gauge
+			)
+
+			switch fieldType {
+			case "counter":
+				val := entity.Counter(field.Int())
+				valCounter = &val
+			case "gauge":
+				val := entity.Gauge(field.Float())
+				valGauge = &val
+			default:
+				w.l.Error(fmt.Sprintf("type of the metrics field %s is invalid", fieldType))
+				continue
+			}
+
+			go func(metricsName, metricsType string, delta *entity.Counter, value *entity.Gauge) {
+				err := w.webAPI.SendMetrics(metricsName, metricsType, delta, value)
 				if err != nil {
 					w.l.Error(fmt.Sprintf("error sending metrics conflict: %s", err))
 				}
-			}(name, strings.ToLower(value.Type().Name()), value)
+			}(name, fieldType, valCounter, valGauge)
 		}
 	}
 }
