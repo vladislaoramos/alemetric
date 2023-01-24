@@ -1,9 +1,8 @@
 agent:
   name: alemetric-agent
-  pollInterval: 2
-  reportInterval: 10
-  host: 127.0.0.1
-  port: 8080
+  pollInterval: 2s
+  reportInterval: 10s
+  serverURL: "127.0.0.1:8080"
   metricsNames:
     - Alloc
     - BuckHashSys
@@ -37,8 +36,7 @@ agent:
 
 server:
   name: alemetric-server
-  host: 127.0.0.1
-  port: 8080
+  address: "127.0.0.1:8080"
 
 logger:
   level: debug

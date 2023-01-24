@@ -5,7 +5,6 @@ import (
 	"github.com/vladislaoramos/alemetric/configs"
 	"github.com/vladislaoramos/alemetric/internal/repo"
 	"github.com/vladislaoramos/alemetric/pkg/log"
-	"net"
 	"net/http"
 )
 
@@ -16,6 +15,5 @@ func Run(cfg *configs.Config) {
 
 	NewRouter(handler, metricsRepo)
 
-	// lgr.Fatal(http.ListenAndServe(net.JoinHostPort("", cfg.Server.Port), handler).Error())
-	lgr.Fatal(http.ListenAndServe(net.JoinHostPort(cfg.Server.Host, cfg.Server.Port), handler).Error())
+	lgr.Fatal(http.ListenAndServe(cfg.Address, handler).Error())
 }
