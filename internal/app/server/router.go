@@ -8,7 +8,6 @@ import (
 	"github.com/vladislaoramos/alemetric/internal/entity"
 	"github.com/vladislaoramos/alemetric/internal/usecase"
 	"github.com/vladislaoramos/alemetric/pkg/log"
-	"io"
 	"net/http"
 	"strings"
 )
@@ -23,19 +22,21 @@ func NewRouter(handler *chi.Mux, tool *usecase.ToolUseCase, l logger.LogInterfac
 	handler.Use(middleware.RealIP)
 	handler.Use(middleware.Logger)
 	handler.Use(middleware.Recoverer)
+	handler.Use(gzipWriteHandler)
+	handler.Use(gzipReadHandler)
 
-	handler.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		names, err := tool.GetMetricsNames()
-		if err != nil {
-			errorHandler(w, err)
-			return
-		}
-		_, err = io.WriteString(w, strings.Join(names, "\n"))
-		if err != nil {
-			errorHandler(w, err)
-			return
-		}
-	})
+	handler.Get(
+		"/",
+		func(w http.ResponseWriter, r *http.Request) {
+			names, err := tool.GetMetricsNames()
+			if err != nil {
+				errorHandler(w, err)
+				return
+			}
+
+			w.Header().Set("Content-Type", "text/html")
+			w.Write([]byte(strings.Join(names, "\n")))
+		})
 
 	// update
 	handler.Route("/update", func(r chi.Router) {
