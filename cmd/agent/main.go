@@ -13,6 +13,7 @@ func main() {
 	flag.StringVar(&cfg.Agent.ServerURL, "a", cfg.Agent.ServerURL, "server address")
 	flag.DurationVar(&cfg.Agent.ReportInterval, "r", cfg.Agent.ReportInterval, "report interval")
 	flag.DurationVar(&cfg.Agent.PollInterval, "p", cfg.Agent.PollInterval, "poll interval")
+	flag.StringVar(&cfg.Agent.Key, "k", cfg.Agent.Key, "encryption key")
 
 	err := configs.Init(cfg)
 	if err != nil {

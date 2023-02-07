@@ -22,6 +22,9 @@ type ToolUseCase struct {
 	writeToFileWithDuration bool
 	syncWriteFile           bool
 	C                       chan struct{}
+
+	checkDataSign bool
+	encryptionKey string
 }
 
 func NewMetricsTool(repo MetricsRepo, l logger.LogInterface, options ...OptionFunc) *ToolUseCase {
@@ -67,6 +70,10 @@ func (mt *ToolUseCase) GetMetricsNames() ([]string, error) {
 }
 
 func (mt *ToolUseCase) StoreMetrics(metrics entity.Metrics) error {
+	if mt.checkDataSign && !metrics.CheckDataSign(mt.encryptionKey) {
+		return ErrDataSignNotEqual
+	}
+
 	switch metrics.MType {
 	case Gauge:
 		if err := mt.repo.StoreMetrics(metrics); err != nil {
@@ -98,12 +105,15 @@ func (mt *ToolUseCase) StoreMetrics(metrics entity.Metrics) error {
 }
 
 func (mt *ToolUseCase) GetMetrics(metrics entity.Metrics) (entity.Metrics, error) {
-	metric, err := mt.repo.GetMetrics(metrics.ID)
+	res, err := mt.repo.GetMetrics(metrics.ID)
 	if err != nil {
 		if errors.Is(err, repo.ErrNotFound) {
-			return metric, ErrNotFound
+			return res, ErrNotFound
 		}
-		return metric, fmt.Errorf("MetricsTool - Metric: %w", err)
+		return res, fmt.Errorf("MetricsTool - Metric: %w", err)
 	}
-	return metric, nil
+	
+	metrics.SignData(mt.encryptionKey)
+
+	return res, nil
 }

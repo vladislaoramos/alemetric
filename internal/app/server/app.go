@@ -27,6 +27,9 @@ func Run(cfg *configs.Config) {
 	} else {
 		mtOptions = append(mtOptions, usecase.SyncWriteFile())
 	}
+	if cfg.Server.Key != "" {
+		mtOptions = append(mtOptions, usecase.CheckDataSign(cfg.Server.Key))
+	}
 
 	handler := chi.NewRouter()
 

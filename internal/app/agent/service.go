@@ -9,11 +9,13 @@ import (
 
 type WebAPIClient struct {
 	client *resty.Client
+	Key    string
 }
 
-func NewWebAPI(client *resty.Client) *WebAPIClient {
+func NewWebAPI(client *resty.Client, key string) *WebAPIClient {
 	return &WebAPIClient{
 		client: client,
+		Key:    key,
 	}
 }
 
@@ -29,6 +31,8 @@ func (wc *WebAPIClient) SendMetrics(
 		Delta: delta,
 		Value: value,
 	}
+
+	body.SignData(wc.Key)
 
 	resp, err := wc.client.
 		R().

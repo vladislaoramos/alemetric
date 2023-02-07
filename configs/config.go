@@ -23,14 +23,16 @@ type Agent struct {
 	ReportInterval time.Duration `yaml:"reportInterval" env:"REPORT_INTERVAL"`
 	ServerURL      string        `yaml:"serverURL" env:"ADDRESS"`
 	MetricsNames   []string      `yaml:"metricsNames"`
+	Key            string        `env:"KEY"`
 }
 
 type Server struct {
-	Name          string        `yaml:"name"`
+	Name          string        `yaml:"name" env:"NAME"`
 	Address       string        `yaml:"address" env:"ADDRESS"`
 	StoreInterval time.Duration `yaml:"storeInterval" env:"STORE_INTERVAL"`
 	StoreFile     string        `yaml:"storeFile" env:"STORE_FILE"`
 	Restore       bool          `yaml:"restore" env:"RESTORE"`
+	Key           string        `env:"KEY"`
 }
 
 const configPath = "./configs/config.yml"

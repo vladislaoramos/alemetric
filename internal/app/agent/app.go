@@ -19,7 +19,7 @@ func Run(cfg *configs.Config) {
 
 	client := resty.New().SetBaseURL(urlProtocol + cfg.Agent.ServerURL)
 
-	webAPI := NewWebAPI(client)
+	webAPI := NewWebAPI(client, cfg.Agent.Key)
 
 	worker := NewWorker(lgr, metrics, cfg.Agent.MetricsNames, webAPI)
 
