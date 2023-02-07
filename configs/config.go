@@ -8,13 +8,18 @@ import (
 )
 
 type Config struct {
-	Agent  `yaml:"agent"`
-	Server `yaml:"server"`
-	Logger `yaml:"logger"`
+	Agent    `yaml:"agent"`
+	Server   `yaml:"server"`
+	Logger   `yaml:"logger"`
+	Database `yaml:"database"`
 }
 
 type Logger struct {
 	Level string `yaml:"level"`
+}
+
+type Database struct {
+	URL string `env:"DATABASE_DSN"`
 }
 
 type Agent struct {
