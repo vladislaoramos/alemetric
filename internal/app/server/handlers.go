@@ -174,3 +174,14 @@ func getSpecificMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterface)
 		}
 	}
 }
+
+func pingHandler(tool *usecase.ToolUseCase, l logger.LogInterface) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if err := tool.PingRepo(r.Context()); err != nil {
+			l.Error(fmt.Errorf("error with database connection: %w", err).Error())
+			http.Error(w, "repo error", http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+	}
+}
