@@ -1,5 +1,7 @@
 package agent
 
+import "github.com/vladislaoramos/alemetric/internal/entity"
+
 type WebAPIAgent interface {
-	SendMetrics(string, string, interface{}) error
+	SendMetrics(string, string, *entity.Counter, *entity.Gauge) error
 }
