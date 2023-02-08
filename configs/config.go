@@ -43,25 +43,10 @@ type Server struct {
 
 const configPath = "./configs/config.yml"
 
-func NewConfig() (*Config, error) {
-	cfg := new(Config)
-
-	err := cleanenv.ReadConfig(configPath, cfg)
-	if err != nil {
-		return nil, fmt.Errorf("error reading config: %s", err.Error())
-	}
-
-	if err = cleanenv.ReadEnv(cfg); err != nil {
-		return nil, fmt.Errorf("error setting envs: %w", err)
-	}
-
-	return cfg, nil
-}
-
 func Init(cfg *Config) error {
 	err := cleanenv.ReadConfig(configPath, cfg)
 	if err != nil {
-		return fmt.Errorf("error reading config: %s", err.Error())
+		return fmt.Errorf("error reading config: %w", err)
 	}
 
 	flag.Parse()

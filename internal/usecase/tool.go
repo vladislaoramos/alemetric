@@ -58,9 +58,9 @@ func (mt *ToolUseCase) saveStorage() {
 		<-mt.C
 		err := mt.repo.StoreAll()
 		if err != nil {
-			mt.logger.Error(fmt.Sprintf("error while writing to file: %s", err))
+			mt.logger.Error(fmt.Sprintf("error while writing to storage: %s", err))
 		} else {
-			mt.logger.Info("store metric success")
+			mt.logger.Info("successful saving of metrics")
 		}
 	}
 }
@@ -81,7 +81,7 @@ func (mt *ToolUseCase) StoreMetrics(metrics entity.Metrics) error {
 			if errors.Is(err, repo.ErrNotFound) {
 				return ErrNotFound
 			}
-			return fmt.Errorf("MetricsTool - StoreMetric: %w", err)
+			return fmt.Errorf("MetricsTool - StoreMetrics - Gauge: %w", err)
 		}
 	case Counter:
 		oldMetric, err := mt.repo.GetMetrics(metrics.ID)
@@ -94,7 +94,7 @@ func (mt *ToolUseCase) StoreMetrics(metrics entity.Metrics) error {
 			metrics.Delta = &delta
 		}
 		if err := mt.repo.StoreMetrics(metrics); err != nil {
-			return fmt.Errorf("MetricsTool - StoreMetric: %w", err)
+			return fmt.Errorf("MetricsTool - StoreMetrics - Counter: %w", err)
 		}
 	default:
 		return ErrNotImplemented
@@ -111,7 +111,7 @@ func (mt *ToolUseCase) GetMetrics(metrics entity.Metrics) (entity.Metrics, error
 		if errors.Is(err, repo.ErrNotFound) {
 			return res, ErrNotFound
 		}
-		return res, fmt.Errorf("MetricsTool - Metric: %w", err)
+		return res, fmt.Errorf("MetricsTool - GetMetrics: %w", err)
 	}
 
 	metrics.SignData(mt.encryptionKey)

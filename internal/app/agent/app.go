@@ -15,6 +15,8 @@ const urlProtocol = "http://"
 func Run(cfg *configs.Config) {
 	lgr := logger.New(cfg.Logger.Level)
 
+	lgr.Info("Agent is running")
+
 	metrics := NewMetrics()
 
 	client := resty.New().SetBaseURL(urlProtocol + cfg.Agent.ServerURL)
@@ -33,5 +35,5 @@ func Run(cfg *configs.Config) {
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	stop := <-sigs
 
-	lgr.Info("agent got stop signal: " + stop.String())
+	lgr.Info("Agent got stop signal: " + stop.String())
 }

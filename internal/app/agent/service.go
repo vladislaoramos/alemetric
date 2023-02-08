@@ -40,12 +40,12 @@ func (wc *WebAPIClient) SendMetrics(
 		SetBody(body).
 		Post("/update/")
 	if err != nil {
-		return fmt.Errorf("cannot send metrics because of error: %w", err)
+		return fmt.Errorf("cannot send metrics from agent: %w", err)
 	}
 
 	status := resp.StatusCode()
 	if status != http.StatusOK {
-		return fmt.Errorf("error sending metrics with status code: %d", status)
+		return fmt.Errorf("sending metrics from agent with not successful status code: %d", status)
 	}
 
 	return nil
@@ -58,10 +58,12 @@ func (wc *WebAPIClient) SendSeveralMetrics(items []entity.Metrics) error {
 		SetBody(items).
 		Post("/updates/")
 	if err != nil {
-		return err
+		return fmt.Errorf("cannot send several metrics from agent: %w", err)
 	}
-	if resp.StatusCode() != http.StatusOK {
-		return err
+
+	status := resp.StatusCode()
+	if status != http.StatusOK {
+		return fmt.Errorf("sending several metrics from agent with not successful status code: %d", status)
 	}
 	return nil
 }

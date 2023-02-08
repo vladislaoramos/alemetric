@@ -33,7 +33,7 @@ func (w *Worker) UpdateMetrics(ticker *time.Ticker) {
 	for {
 		<-ticker.C
 		w.metrics.CollectMetrics()
-		w.l.Info("metrics updated")
+		w.l.Info("Metrics updated")
 	}
 }
 
@@ -44,7 +44,7 @@ func (w *Worker) SendMetrics(ticker *time.Ticker) {
 		for _, name := range w.metricsNames {
 			field := reflect.Indirect(reflect.ValueOf(w.metrics)).FieldByName(name)
 			if !field.IsValid() {
-				w.l.Error(fmt.Sprintf("field `%s` is not valid", name))
+				w.l.Error(fmt.Sprintf("Field `%s` is not valid", name))
 				continue
 			}
 
@@ -63,14 +63,14 @@ func (w *Worker) SendMetrics(ticker *time.Ticker) {
 				val := entity.Gauge(field.Float())
 				valGauge = &val
 			default:
-				w.l.Error(fmt.Sprintf("type of the metrics field %s is invalid", fieldType))
+				w.l.Error(fmt.Sprintf("Type of the metrics field `%s` is invalid", fieldType))
 				continue
 			}
 
 			go func(metricsName, metricsType string, delta *entity.Counter, value *entity.Gauge) {
 				err := w.webAPI.SendMetrics(metricsName, metricsType, delta, value)
 				if err != nil {
-					w.l.Error(fmt.Sprintf("error sending metrics conflict: %s", err))
+					w.l.Error(fmt.Sprintf("Sending metrics conflict: %s", err))
 				}
 			}(name, fieldType, valCounter, valGauge)
 		}
