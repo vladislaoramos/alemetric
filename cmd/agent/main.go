@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"github.com/vladislaoramos/alemetric/configs"
 	"github.com/vladislaoramos/alemetric/internal/app/agent"
 	"log"
@@ -18,7 +17,7 @@ func main() {
 
 	err := configs.Init(cfg)
 	if err != nil {
-		log.Fatal(fmt.Sprintf("Agent - Config Init - Error: %s", err.Error()))
+		log.Fatalf("Agent - Config Init - Error: %s", err.Error())
 	}
 
 	agent.Run(cfg)

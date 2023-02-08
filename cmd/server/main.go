@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"github.com/vladislaoramos/alemetric/configs"
 	"github.com/vladislaoramos/alemetric/internal/app/server"
 	"log"
@@ -20,7 +19,7 @@ func main() {
 
 	err := configs.Init(cfg)
 	if err != nil {
-		log.Fatal(fmt.Sprintf("Server - Config Init - Error: %s", err.Error()))
+		log.Fatalf("Server - Config Init - Error: %s", err.Error())
 	}
 
 	server.Run(cfg)
