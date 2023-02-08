@@ -50,3 +50,18 @@ func (wc *WebAPIClient) SendMetrics(
 
 	return nil
 }
+
+func (wc *WebAPIClient) SendSeveralMetrics(items []entity.Metrics) error {
+	resp, err := wc.client.
+		R().
+		SetHeader("Content-Type", "application/json").
+		SetBody(items).
+		Post("/updates/")
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode() != http.StatusOK {
+		return err
+	}
+	return nil
+}
