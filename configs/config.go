@@ -19,7 +19,8 @@ type Logger struct {
 }
 
 type Database struct {
-	URL string `env:"DATABASE_DSN"`
+	URL          string `env:"DATABASE_DSN"`
+	MigrationDir string `yaml:"migration_dir"`
 }
 
 type Agent struct {

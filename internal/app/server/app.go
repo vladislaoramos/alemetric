@@ -33,11 +33,17 @@ func Run(cfg *configs.Config) {
 
 	var curRepo usecase.MetricsRepo
 	if cfg.Database.URL != "" {
+		err := runMigration(cfg.Database.URL, cfg.Database.MigrationDir)
+		if err != nil {
+			lgr.Fatal(err.Error())
+		}
+
 		db, err := postgres.New(cfg.Database.URL)
 		if err != nil {
 			lgr.Fatal(err.Error())
 		}
 		defer db.Close()
+		
 		curRepo = repo.NewPostgresRepo(db)
 	} else {
 		curRepo = repo.NewMetricsRepo(repoOpts...)

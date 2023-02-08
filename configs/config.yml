@@ -43,3 +43,6 @@ server:
 
 logger:
   level: debug
+
+postgres:
+  migration_dir: "migrations"
