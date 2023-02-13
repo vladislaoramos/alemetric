@@ -41,7 +41,7 @@ func updateSeveralMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterfac
 			}
 		}
 
-		w.Header().Set("Content-Type", "text/plain")
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 	}
 }
@@ -60,7 +60,7 @@ func updateMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterface) http
 			return
 		}
 
-		w.Header().Set("Content-Type", "text/plain")
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 	}
 }
@@ -115,7 +115,7 @@ func updateSpecificMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterfa
 			http.Error(w, "metrics type is not found", http.StatusNotImplemented)
 		}
 
-		w.Header().Set("Content-Type", "text/plain")
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 	}
 }
