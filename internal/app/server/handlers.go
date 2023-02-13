@@ -164,13 +164,19 @@ func getSpecificMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterface)
 			return
 		}
 
+		var resp []byte
+
 		switch metricsType {
 		case Gauge:
-			w.Write([]byte(fmt.Sprintf("%g", *res.Value)))
+			resp = []byte(fmt.Sprintf("%g", *res.Value))
 		case Counter:
-			w.Write([]byte(fmt.Sprintf("%d", *res.Delta)))
+			resp = []byte(fmt.Sprintf("%d", *res.Delta))
 		default:
 			http.Error(w, "metrics type is not found", http.StatusNotImplemented)
+			return
 		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(resp)
 	}
 }
