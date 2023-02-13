@@ -75,8 +75,9 @@ func updateSpecificMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterfa
 		case Gauge:
 			value, err := entity.ParseGaugeMetrics(metricsValue)
 			if err != nil {
-				l.Error(fmt.Errorf("error with parsing metrics: %w", err).Error())
+				l.Error(err.Error())
 				http.Error(w, "parsing error", http.StatusBadRequest)
+				return
 			}
 
 			metrics := entity.Metrics{
@@ -94,8 +95,9 @@ func updateSpecificMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterfa
 		case Counter:
 			value, err := entity.ParseCounterMetrics(metricsValue)
 			if err != nil {
-				l.Error(fmt.Errorf("error with parsing metrics: %w", err).Error())
+				l.Error(err.Error())
 				http.Error(w, "parsing error", http.StatusBadRequest)
+				return
 			}
 
 			metrics := entity.Metrics{
@@ -130,14 +132,14 @@ func getSomeMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterface) htt
 
 		value, err := tool.GetMetrics(metrics)
 		if err != nil {
-			l.Error(fmt.Errorf("error with getting metrics: %w", err).Error())
+			l.Error(err.Error())
 			errorHandler(w, err)
 			return
 		}
 
 		resp, err := json.Marshal(value)
 		if err != nil {
-			l.Error(fmt.Errorf("error with marshalling response: %w", err).Error())
+			l.Error(err.Error())
 			errorHandler(w, err)
 			return
 		}
@@ -159,8 +161,8 @@ func getSpecificMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterface)
 
 		res, err := tool.GetMetrics(metrics)
 		if err != nil {
-			l.Error(fmt.Errorf("metrics is not found: %w", err).Error())
-			http.Error(w, "metrics is not found", http.StatusNotFound)
+			l.Error(err.Error())
+			errorHandler(w, err)
 			return
 		}
 
