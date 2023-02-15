@@ -96,6 +96,7 @@ func (mt *ToolUseCase) StoreMetrics(metrics entity.Metrics) error {
 			}
 			delta := *metrics.Delta + oldDelta
 			metrics.Delta = &delta
+			metrics.SignData(mt.encryptionKey)
 		}
 		if err := mt.repo.StoreMetrics(metrics); err != nil {
 			return fmt.Errorf("MetricsTool - StoreMetric: %w", err)

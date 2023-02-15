@@ -60,8 +60,22 @@ func updateMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterface) http
 			return
 		}
 
+		value, err := tool.GetMetrics(metrics)
+		if err != nil {
+			l.Error(err.Error())
+			errorHandler(w, err)
+			return
+		}
+
+		resp, err := json.Marshal(value)
+		if err != nil {
+			l.Error(err.Error())
+			errorHandler(w, err)
+			return
+		}
+
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
+		w.Write(resp)
 	}
 }
 
@@ -71,6 +85,7 @@ func updateSpecificMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterfa
 		metricsName := chi.URLParam(r, "metricsName")
 		metricsValue := chi.URLParam(r, "metricsValue")
 
+		var metrics entity.Metrics
 		switch metricsType {
 		case Gauge:
 			value, err := entity.ParseGaugeMetrics(metricsValue)
@@ -80,7 +95,7 @@ func updateSpecificMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterfa
 				return
 			}
 
-			metrics := entity.Metrics{
+			metrics = entity.Metrics{
 				ID:    metricsName,
 				MType: value.Type(),
 				Value: &value,
@@ -100,7 +115,7 @@ func updateSpecificMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterfa
 				return
 			}
 
-			metrics := entity.Metrics{
+			metrics = entity.Metrics{
 				ID:    metricsName,
 				MType: value.Type(),
 				Delta: &value,
@@ -117,8 +132,15 @@ func updateSpecificMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterfa
 			http.Error(w, "metrics type is not found", http.StatusNotImplemented)
 		}
 
+		resp, err := json.Marshal(metrics)
+		if err != nil {
+			l.Error(err.Error())
+			errorHandler(w, err)
+			return
+		}
+
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
+		w.Write(resp)
 	}
 }
 
