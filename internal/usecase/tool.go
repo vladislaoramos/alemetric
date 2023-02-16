@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/vladislaoramos/alemetric/internal/entity"
@@ -21,6 +22,7 @@ type ToolUseCase struct {
 	writeFileDuration       time.Duration
 	writeToFileWithDuration bool
 	syncWriteFile           bool
+	asyncWriteFile          bool
 	C                       chan struct{}
 
 	checkDataSign bool
@@ -55,7 +57,7 @@ func NewMetricsTool(repo MetricsRepo, l logger.LogInterface, options ...OptionFu
 func (mt *ToolUseCase) saveStorage() {
 	for {
 		<-mt.C
-		err := mt.repo.StoreToFile()
+		err := mt.repo.StoreAll()
 		if err != nil {
 			mt.logger.Error(fmt.Sprintf("error while writing to file: %s", err))
 		} else {
@@ -104,8 +106,14 @@ func (mt *ToolUseCase) StoreMetrics(metrics entity.Metrics) error {
 	default:
 		return ErrNotImplemented
 	}
-	if mt.syncWriteFile {
+	if mt.asyncWriteFile {
 		mt.C <- struct{}{}
+	}
+	if mt.syncWriteFile {
+		err := mt.repo.StoreAll()
+		if err != nil {
+			return fmt.Errorf("metrics Tool - StoreMetrics: %w", err)
+		}
 	}
 	return nil
 }
@@ -122,4 +130,8 @@ func (mt *ToolUseCase) GetMetrics(metrics entity.Metrics) (entity.Metrics, error
 	res.SignData(mt.encryptionKey)
 
 	return res, nil
+}
+
+func (mt *ToolUseCase) PingRepo(ctx context.Context) error {
+	return mt.repo.Ping(ctx)
 }

@@ -2,6 +2,7 @@ package repo
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/vladislaoramos/alemetric/internal/entity"
@@ -27,7 +28,7 @@ func NewMetricsRepo(options ...OptionFunc) *MetricsRepo {
 	}
 
 	if metricsRepo.Restore {
-		metricsRepo.UploadFromFile()
+		metricsRepo.Upload()
 	}
 
 	return metricsRepo
@@ -56,7 +57,7 @@ func (r *MetricsRepo) GetMetrics(name string) (entity.Metrics, error) {
 	return value, nil
 }
 
-func (r *MetricsRepo) StoreToFile() error {
+func (r *MetricsRepo) StoreAll() error {
 	file, err := os.OpenFile(r.StoreFilePath, os.O_WRONLY|os.O_CREATE, 0777)
 	if err != nil {
 		return fmt.Errorf("error opening file with metrics: %w", err)
@@ -86,7 +87,7 @@ func (r *MetricsRepo) StoreToFile() error {
 	return nil
 }
 
-func (r *MetricsRepo) UploadFromFile() error {
+func (r *MetricsRepo) Upload() error {
 	file, err := os.OpenFile(r.StoreFilePath, os.O_RDONLY, 0777)
 	if err != nil {
 		return fmt.Errorf("error opening file with metrics: %w", err)
@@ -104,5 +105,9 @@ func (r *MetricsRepo) UploadFromFile() error {
 		return fmt.Errorf("error unmarshalling file with metrics: %w", err)
 	}
 
+	return nil
+}
+
+func (r *MetricsRepo) Ping(_ context.Context) error {
 	return nil
 }
