@@ -108,6 +108,6 @@ func (r *MetricsRepo) Upload() error {
 	return nil
 }
 
-func (r *MetricsRepo) Ping(ctx context.Context) error {
+func (r *MetricsRepo) Ping(_ context.Context) error {
 	return nil
 }
