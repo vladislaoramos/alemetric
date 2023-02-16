@@ -37,9 +37,9 @@ agent:
 server:
   name: alemetric-server
   address: "127.0.0.1:8080"
-  storeInternal: 0s
+  storeInternal: 300s
   storeFile: "/tmp/devops-metrics-db.json"
-  restore: false
+  restore: true
 
 logger:
   level: debug

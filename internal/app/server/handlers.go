@@ -167,6 +167,7 @@ func getSomeMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterface) htt
 		}
 
 		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
 		w.Write(resp)
 	}
 }
