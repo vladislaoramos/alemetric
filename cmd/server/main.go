@@ -15,7 +15,7 @@ func main() {
 	flag.DurationVar(&cfg.Server.StoreInterval, "i", cfg.Server.StoreInterval, "store interval")
 	flag.StringVar(&cfg.Server.StoreFile, "f", cfg.Server.StoreFile, "store file")
 	flag.StringVar(&cfg.Server.Key, "k", cfg.Server.Key, "encryption key")
-	flag.StringVar(&cfg.Database.URL, "db", "", "database")
+	flag.StringVar(&cfg.Database.URL, "d", "", "database")
 
 	err := configs.Init(cfg)
 	if err != nil {

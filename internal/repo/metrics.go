@@ -17,7 +17,7 @@ type MetricsRepo struct {
 	Restore       bool
 }
 
-func NewMetricsRepo(options ...OptionFunc) *MetricsRepo {
+func NewMetricsRepo(options ...OptionFunc) (*MetricsRepo, error) {
 	metricsRepo := &MetricsRepo{
 		Mu:      &sync.Mutex{},
 		storage: make(map[string]entity.Metrics),
@@ -28,10 +28,13 @@ func NewMetricsRepo(options ...OptionFunc) *MetricsRepo {
 	}
 
 	if metricsRepo.Restore {
-		metricsRepo.Upload()
+		err := metricsRepo.Upload()
+		if err != nil {
+			return metricsRepo, err
+		}
 	}
 
-	return metricsRepo
+	return metricsRepo, nil
 }
 
 func (r *MetricsRepo) GetMetricsNames() []string {

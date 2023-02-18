@@ -43,3 +43,6 @@ server:
 
 logger:
   level: debug
+
+database:
+  migration_dir: "migrations"

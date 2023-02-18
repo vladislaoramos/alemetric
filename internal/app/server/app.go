@@ -31,16 +31,23 @@ func Run(cfg *configs.Config) {
 		mtOptions = append(mtOptions, usecase.CheckDataSign(cfg.Server.Key))
 	}
 
-	var curRepo usecase.MetricsRepo
+	var (
+		curRepo usecase.MetricsRepo
+		db      *postgres.DB
+		err     error
+	)
 	if cfg.Database.URL != "" {
-		db, err := postgres.New(cfg.Database.URL)
+		db, err = postgres.New(cfg.Database.URL)
 		if err != nil {
 			lgr.Fatal(err.Error())
 		}
 		defer db.Close()
 		curRepo = repo.NewPostgresRepo(db)
 	} else {
-		curRepo = repo.NewMetricsRepo(repoOpts...)
+		curRepo, err = repo.NewMetricsRepo(repoOpts...)
+		if err != nil {
+			lgr.Fatal(err.Error())
+		}
 	}
 
 	handler := chi.NewRouter()
