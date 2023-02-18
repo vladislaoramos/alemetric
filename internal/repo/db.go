@@ -19,7 +19,7 @@ func (r *PostgresRepo) GetMetricsNames() []string {
 }
 
 func (r *PostgresRepo) GetMetrics(_ string) (entity.Metrics, error) {
-	return entity.Metrics{}, ErrNotFound
+	return entity.Metrics{}, nil
 }
 
 func (r *PostgresRepo) StoreMetrics(_ entity.Metrics) error {
