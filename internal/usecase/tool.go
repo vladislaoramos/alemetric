@@ -46,7 +46,7 @@ func NewMetricsTool(repo MetricsRepo, l logger.LogInterface, options ...OptionFu
 		}()
 	}
 
-	if useCase.writeToFileWithDuration || useCase.syncWriteFile {
+	if useCase.writeToFileWithDuration || useCase.asyncWriteFile {
 		useCase.C = make(chan struct{}, 1)
 		go useCase.saveStorage()
 	}
