@@ -30,7 +30,7 @@ func NewMetricsRepo(options ...OptionFunc) (*MetricsRepo, error) {
 	if metricsRepo.Restore {
 		err := metricsRepo.Upload()
 		if err != nil {
-			return metricsRepo, err
+			return nil, err
 		}
 	}
 
