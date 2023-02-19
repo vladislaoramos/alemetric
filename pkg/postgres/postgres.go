@@ -40,6 +40,8 @@ func New(url string) (*DB, error) {
 		db.Pool, err = pgxpool.ConnectConfig(context.Background(), poolConfig)
 		if err == nil {
 			break
+		} else {
+			log.Printf("error db connecting: %s", err)
 		}
 		log.Printf("connection attempts of PostgreSQL: %d", db.connAttempts)
 		time.Sleep(db.connTimeout)

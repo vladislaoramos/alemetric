@@ -164,6 +164,10 @@ func (c *Config) updateServerConfigs(v *Config) {
 	if v.Level != "" && c.Level != v.Level {
 		c.Level = v.Level
 	}
+
+	if v.Database.URL != "" && c.Database.URL != v.Database.URL {
+		c.Database.URL = v.Database.URL
+	}
 }
 
 func (c *Config) parseFlags(app string) {
