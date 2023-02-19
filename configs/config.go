@@ -2,7 +2,6 @@ package configs
 
 import (
 	"flag"
-	"fmt"
 	"github.com/ilyakaznacheev/cleanenv"
 	"time"
 )
@@ -40,34 +39,44 @@ type Server struct {
 	Key           string        `env:"KEY"`
 }
 
-const configPath = "./configs/config.yml"
+const (
+	configPath   = "./configs/config.yml"
+	AgentConfig  = "agent"
+	ServerConfig = "server"
+)
 
-func NewConfig() (*Config, error) {
+func NewConfig(app string) (*Config, error) {
 	cfg := new(Config)
 
-	err := cleanenv.ReadConfig(configPath, cfg)
-	if err != nil {
-		return nil, fmt.Errorf("error reading config: %s", err.Error())
+	switch app {
+	case AgentConfig:
+		flag.StringVar(&cfg.Agent.ServerURL, "a", cfg.Agent.ServerURL, "server address")
+		flag.DurationVar(&cfg.Agent.ReportInterval, "r", cfg.Agent.ReportInterval, "report interval")
+		flag.DurationVar(&cfg.Agent.PollInterval, "p", cfg.Agent.PollInterval, "poll interval")
+		flag.StringVar(&cfg.Agent.Key, "k", cfg.Agent.Key, "encryption key")
+	case ServerConfig:
+		flag.StringVar(&cfg.Server.Address, "a", cfg.Server.Address, "server address")
+		flag.BoolVar(&cfg.Server.Restore, "r", cfg.Server.Restore, "restore data from file")
+		flag.DurationVar(&cfg.Server.StoreInterval, "i", cfg.Server.StoreInterval, "store interval")
+		flag.StringVar(&cfg.Server.StoreFile, "f", cfg.Server.StoreFile, "store file")
+		flag.StringVar(&cfg.Server.Key, "k", cfg.Server.Key, "encryption key")
+		flag.StringVar(&cfg.Database.URL, "d", cfg.Database.URL, "database")
 	}
 
-	if err = cleanenv.ReadEnv(cfg); err != nil {
-		return nil, fmt.Errorf("error setting envs: %w", err)
+	// First: init from yaml
+	err := cleanenv.ReadConfig(configPath, cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	// Next: update from flags if there are any
+	flag.Parse()
+
+	// Finally: update from envs if there are any
+	err = cleanenv.ReadEnv(cfg)
+	if err != nil {
+		return nil, err
 	}
 
 	return cfg, nil
-}
-
-func Init(cfg *Config) error {
-	err := cleanenv.ReadConfig(configPath, cfg)
-	if err != nil {
-		return fmt.Errorf("error reading config: %s", err.Error())
-	}
-
-	flag.Parse()
-
-	if err = cleanenv.ReadEnv(cfg); err != nil {
-		return fmt.Errorf("error setting envs: %w", err)
-	}
-
-	return nil
 }
