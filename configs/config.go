@@ -2,6 +2,7 @@ package configs
 
 import (
 	"flag"
+	"fmt"
 	"github.com/ilyakaznacheev/cleanenv"
 	"time"
 )
@@ -40,43 +41,122 @@ type Server struct {
 }
 
 const (
-	configPath   = "./configs/config.yml"
+	configPath = "./configs/config.yml"
+
+	serverURL = "127.0.0.1:8080"
+
+	pollInterval   = time.Second * 2
+	reportInterval = time.Second * 10
+	storeInterval  = time.Second * 300
+	storeFile      = "/tmp/devops-metrics-db.json"
+
+	agentName  = "alemetric-agent"
+	serverName = "alemetric-server"
+
 	AgentConfig  = "agent"
 	ServerConfig = "server"
+
+	loggerDefaultLevel = "debug"
 )
 
-func NewConfig(app string) (*Config, error) {
-	cfg := new(Config)
+var metricsNames = []string{
+	"Alloc",
+	"BuckHashSys",
+	"Frees",
+	"GCCPUFraction",
+	"GCSys",
+	"HeapAlloc",
+	"HeapIdle",
+	"HeapInuse",
+	"HeapObjects",
+	"HeapReleased",
+	"HeapSys",
+	"LastGC",
+	"Lookups",
+	"MCacheInuse",
+	"MCacheSys",
+	"MSpanInuse",
+	"MSpanSys",
+	"Mallocs",
+	"NextGC",
+	"NumForcedGC",
+	"NumGC",
+	"OtherSys",
+	"PauseTotalNs",
+	"StackInuse",
+	"StackSys",
+	"Sys",
+	"TotalAlloc",
+	"RandomValue",
+	"PollCount",
+}
+
+func NewConfig(app string) *Config {
+	envCfg := new(Config)
+	_ = cleanenv.ReadEnv(envCfg)
+
+	flagCfg := new(Config)
 
 	switch app {
 	case AgentConfig:
-		flag.StringVar(&cfg.Agent.ServerURL, "a", cfg.Agent.ServerURL, "server address")
-		flag.DurationVar(&cfg.Agent.ReportInterval, "r", cfg.Agent.ReportInterval, "report interval")
-		flag.DurationVar(&cfg.Agent.PollInterval, "p", cfg.Agent.PollInterval, "poll interval")
-		flag.StringVar(&cfg.Agent.Key, "k", cfg.Agent.Key, "encryption key")
+		flag.StringVar(&flagCfg.Agent.ServerURL, "a", serverURL, "server address")
+		flag.DurationVar(&flagCfg.Agent.ReportInterval, "r", reportInterval, "report interval")
+		flag.DurationVar(&flagCfg.Agent.PollInterval, "p", pollInterval, "poll interval")
+		flag.StringVar(&flagCfg.Agent.Key, "k", flagCfg.Agent.Key, "encryption key")
 	case ServerConfig:
-		flag.StringVar(&cfg.Server.Address, "a", cfg.Server.Address, "server address")
-		flag.BoolVar(&cfg.Server.Restore, "r", cfg.Server.Restore, "restore data from file")
-		flag.DurationVar(&cfg.Server.StoreInterval, "i", cfg.Server.StoreInterval, "store interval")
-		flag.StringVar(&cfg.Server.StoreFile, "f", cfg.Server.StoreFile, "store file")
-		flag.StringVar(&cfg.Server.Key, "k", cfg.Server.Key, "encryption key")
-		flag.StringVar(&cfg.Database.URL, "d", cfg.Database.URL, "database")
+		flag.StringVar(&flagCfg.Server.Address, "a", serverURL, "server address")
+		flag.BoolVar(&flagCfg.Server.Restore, "r", true, "restore data from file")
+		flag.DurationVar(&flagCfg.Server.StoreInterval, "i", storeInterval, "store interval")
+		flag.StringVar(&flagCfg.Server.StoreFile, "f", storeFile, "store file")
+		flag.StringVar(&flagCfg.Server.Key, "k", flagCfg.Server.Key, "encryption key")
+		flag.StringVar(&flagCfg.Database.URL, "d", flagCfg.Database.URL, "database")
 	}
 
-	// First: init from yaml
-	err := cleanenv.ReadConfig(configPath, cfg)
-	if err != nil {
-		return nil, err
-	}
-
-	// Next: update from flags if there are any
 	flag.Parse()
 
-	// Finally: update from envs if there are any
-	err = cleanenv.ReadEnv(cfg)
-	if err != nil {
-		return nil, err
+	if envCfg.Agent.ServerURL == "" {
+		envCfg.Agent.ServerURL = flagCfg.Agent.ServerURL
 	}
 
-	return cfg, nil
+	if envCfg.Agent.ReportInterval.String() == "0s" {
+		envCfg.Agent.ReportInterval = flagCfg.Agent.ReportInterval
+	}
+
+	if envCfg.Agent.PollInterval.String() == "0s" {
+		envCfg.Agent.PollInterval = flagCfg.Agent.PollInterval
+	}
+
+	if envCfg.Agent.Key == "" {
+		envCfg.Agent.Key = flagCfg.Agent.Key
+	}
+
+	if envCfg.Server.Address == "" {
+		envCfg.Server.Address = flagCfg.Server.Address
+	}
+
+	if !envCfg.Server.Restore {
+		envCfg.Server.Restore = flagCfg.Server.Restore
+	}
+
+	if envCfg.Server.StoreInterval.String() == "0s" {
+		envCfg.Server.StoreInterval = flagCfg.Server.StoreInterval
+	}
+
+	if envCfg.Server.StoreFile == "" {
+		envCfg.Server.StoreFile = flagCfg.Server.StoreFile
+	}
+
+	if envCfg.Server.Key == "" {
+		envCfg.Server.Key = flagCfg.Server.Key
+	}
+
+	if envCfg.Database.URL == "" {
+		envCfg.Database.URL = flagCfg.Database.URL
+	}
+
+	return envCfg
+}
+
+func (c Config) String() string {
+	return fmt.Sprintf("restore: %v storeFile: %v storeInterval: %v", c.Restore, c.StoreFile, c.StoreInterval)
 }

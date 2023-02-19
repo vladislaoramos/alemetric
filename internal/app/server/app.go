@@ -13,10 +13,10 @@ func Run(cfg *configs.Config) {
 	lgr := logger.New(cfg.Logger.Level)
 
 	repoOpts := make([]repo.OptionFunc, 0)
-	if cfg.Server.StoreFile != " " {
+	if cfg.Server.StoreFile != "" {
 		repoOpts = append(repoOpts, repo.StoreFilePath(cfg.Server.StoreFile))
 	}
-	if cfg.Server.Restore && cfg.Server.StoreFile != " " {
+	if cfg.Server.Restore && cfg.Server.StoreFile != "" {
 		repoOpts = append(repoOpts, repo.Restore())
 	}
 

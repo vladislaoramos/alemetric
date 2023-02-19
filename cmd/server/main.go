@@ -3,14 +3,12 @@ package main
 import (
 	"github.com/vladislaoramos/alemetric/configs"
 	"github.com/vladislaoramos/alemetric/internal/app/server"
-	"log"
+	logger "github.com/vladislaoramos/alemetric/pkg/log"
 )
 
 func main() {
-	cfg, err := configs.NewConfig(configs.ServerConfig)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-
+	cfg := configs.NewConfig(configs.ServerConfig)
+	lgr := logger.New(cfg.Logger.Level)
+	lgr.Info(cfg.String())
 	server.Run(cfg)
 }

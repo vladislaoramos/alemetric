@@ -91,7 +91,7 @@ func (r *MetricsRepo) StoreAll() error {
 }
 
 func (r *MetricsRepo) Upload() error {
-	file, err := os.OpenFile(r.StoreFilePath, os.O_RDONLY, 0777)
+	file, err := os.OpenFile(r.StoreFilePath, os.O_RDONLY|os.O_CREATE, 0777)
 	if err != nil {
 		return fmt.Errorf("error opening file with metrics: %w", err)
 	}
