@@ -49,6 +49,7 @@ const (
 	reportInterval = time.Second * 10
 	storeInterval  = time.Second * 300
 	storeFile      = "/tmp/devops-metrics-db.json"
+	restoreFlag    = true
 
 	agentName  = "alemetric-agent"
 	serverName = "alemetric-server"
@@ -91,72 +92,132 @@ var metricsNames = []string{
 	"PollCount",
 }
 
-func NewConfig(app string) *Config {
-	envCfg := new(Config)
-	_ = cleanenv.ReadEnv(envCfg)
+func defaultServerCfg() *Config {
+	return &Config{
+		Server: Server{
+			Name:          serverName,
+			Address:       serverURL,
+			StoreInterval: storeInterval,
+			StoreFile:     storeFile,
+			Restore:       restoreFlag,
+		},
+		Logger: Logger{Level: loggerDefaultLevel},
+	}
+}
 
-	flagCfg := new(Config)
+func defaultAgentCfg() *Config {
+	return &Config{
+		Agent: Agent{
+			Name:           agentName,
+			PollInterval:   pollInterval,
+			ReportInterval: reportInterval,
+			ServerURL:      serverURL,
+			MetricsNames:   metricsNames,
+		},
+		Logger: Logger{Level: loggerDefaultLevel},
+	}
+}
 
+func (c *Config) updateAgentConfigs(v *Config) {
+	if v.Agent.Name != "" && c.Agent.Name != v.Agent.Name {
+		c.Agent.Name = v.Agent.Name
+	}
+
+	if v.ServerURL != "" && c.ServerURL != v.ServerURL {
+		c.ServerURL = v.ServerURL
+	}
+
+	if v.PollInterval.String() != "0s" && c.PollInterval != v.PollInterval {
+		c.PollInterval = v.PollInterval
+	}
+
+	if v.ReportInterval.String() != "0s" && c.ReportInterval != v.ReportInterval {
+		c.ReportInterval = v.ReportInterval
+	}
+
+	if v.Level != "" && c.Level != v.Level {
+		c.Level = v.Level
+	}
+}
+
+func (c *Config) updateServerConfigs(v *Config) {
+	if v.Server.Name != "" && c.Server.Name != v.Server.Name {
+		c.Server.Name = v.Server.Name
+	}
+
+	if v.Address != "" && c.Address != v.Address {
+		c.Address = v.Address
+	}
+
+	if v.StoreFile != "" && c.StoreFile != v.StoreFile {
+		c.StoreFile = v.StoreFile
+	}
+
+	if v.StoreInterval.String() != "0s" && c.StoreInterval != v.StoreInterval {
+		c.StoreInterval = v.StoreInterval
+	}
+
+	if c.Restore != v.Restore {
+		c.Restore = v.Restore
+	}
+
+	if v.Level != "" && c.Level != v.Level {
+		c.Level = v.Level
+	}
+}
+
+func (c *Config) parseFlags(app string) {
 	switch app {
 	case AgentConfig:
-		flag.StringVar(&flagCfg.Agent.ServerURL, "a", serverURL, "server address")
-		flag.DurationVar(&flagCfg.Agent.ReportInterval, "r", reportInterval, "report interval")
-		flag.DurationVar(&flagCfg.Agent.PollInterval, "p", pollInterval, "poll interval")
-		flag.StringVar(&flagCfg.Agent.Key, "k", flagCfg.Agent.Key, "encryption key")
+		flag.StringVar(&c.Agent.ServerURL, "a", serverURL, "server address")
+		flag.DurationVar(&c.Agent.ReportInterval, "r", reportInterval, "report interval")
+		flag.DurationVar(&c.Agent.PollInterval, "p", pollInterval, "poll interval")
+		flag.StringVar(&c.Agent.Key, "k", "", "encryption key")
 	case ServerConfig:
-		flag.StringVar(&flagCfg.Server.Address, "a", serverURL, "server address")
-		flag.BoolVar(&flagCfg.Server.Restore, "r", true, "restore data from file")
-		flag.DurationVar(&flagCfg.Server.StoreInterval, "i", storeInterval, "store interval")
-		flag.StringVar(&flagCfg.Server.StoreFile, "f", storeFile, "store file")
-		flag.StringVar(&flagCfg.Server.Key, "k", flagCfg.Server.Key, "encryption key")
-		flag.StringVar(&flagCfg.Database.URL, "d", flagCfg.Database.URL, "database")
+		flag.StringVar(&c.Server.Address, "a", "", "server address")
+		flag.BoolVar(&c.Server.Restore, "r", true, "restore data from file")
+		flag.DurationVar(&c.Server.StoreInterval, "i", 0, "store interval")
+		flag.StringVar(&c.Server.StoreFile, "f", "", "store file")
+		flag.StringVar(&c.Server.Key, "k", "", "encryption key")
+		flag.StringVar(&c.Database.URL, "d", "", "database")
 	}
 
 	flag.Parse()
-
-	if envCfg.Agent.ServerURL == "" {
-		envCfg.Agent.ServerURL = flagCfg.Agent.ServerURL
-	}
-
-	if envCfg.Agent.ReportInterval.String() == "0s" {
-		envCfg.Agent.ReportInterval = flagCfg.Agent.ReportInterval
-	}
-
-	if envCfg.Agent.PollInterval.String() == "0s" {
-		envCfg.Agent.PollInterval = flagCfg.Agent.PollInterval
-	}
-
-	if envCfg.Agent.Key == "" {
-		envCfg.Agent.Key = flagCfg.Agent.Key
-	}
-
-	if envCfg.Server.Address == "" {
-		envCfg.Server.Address = flagCfg.Server.Address
-	}
-
-	if !envCfg.Server.Restore {
-		envCfg.Server.Restore = flagCfg.Server.Restore
-	}
-
-	if envCfg.Server.StoreInterval.String() == "0s" {
-		envCfg.Server.StoreInterval = flagCfg.Server.StoreInterval
-	}
-
-	if envCfg.Server.StoreFile == "" {
-		envCfg.Server.StoreFile = flagCfg.Server.StoreFile
-	}
-
-	if envCfg.Server.Key == "" {
-		envCfg.Server.Key = flagCfg.Server.Key
-	}
-
-	if envCfg.Database.URL == "" {
-		envCfg.Database.URL = flagCfg.Database.URL
-	}
-
-	return envCfg
 }
 
-func (c Config) String() string {
+func NewConfig(app string) *Config {
+	var (
+		cfg   *Config
+		envs  *Config
+		flags *Config
+	)
+
+	switch app {
+	case AgentConfig:
+		cfg = defaultAgentCfg()
+
+		flags = new(Config)
+		flags.parseFlags(AgentConfig)
+		cfg.updateAgentConfigs(flags)
+
+		envs = new(Config)
+		_ = cleanenv.ReadEnv(envs)
+		cfg.updateAgentConfigs(envs)
+	case ServerConfig:
+		cfg = defaultServerCfg()
+
+		flags = new(Config)
+		flags.parseFlags(ServerConfig)
+		cfg.updateServerConfigs(flags)
+
+		envs = new(Config)
+		_ = cleanenv.ReadEnv(envs)
+		cfg.updateServerConfigs(envs)
+	}
+
+	return cfg
+}
+
+func (c *Config) String() string {
 	return fmt.Sprintf("restore: %v storeFile: %v storeInterval: %v", c.Restore, c.StoreFile, c.StoreInterval)
 }
