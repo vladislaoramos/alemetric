@@ -1,20 +1,20 @@
 package agent
 
 import (
-	"github.com/go-resty/resty/v2"
-	"github.com/vladislaoramos/alemetric/configs"
-	logger "github.com/vladislaoramos/alemetric/pkg/log"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/go-resty/resty/v2"
+	"github.com/vladislaoramos/alemetric/configs"
+	logger "github.com/vladislaoramos/alemetric/pkg/log"
 )
 
 const urlProtocol = "http://"
 
 func Run(cfg *configs.Config) {
 	lgr := logger.New(cfg.Logger.Level)
-
 	metrics := NewMetrics()
 
 	client := resty.New().SetBaseURL(urlProtocol + cfg.Agent.ServerURL)
