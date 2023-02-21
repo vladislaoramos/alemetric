@@ -2,7 +2,6 @@ package configs
 
 import (
 	"flag"
-	"fmt"
 	"time"
 
 	"github.com/ilyakaznacheev/cleanenv"
@@ -217,8 +216,4 @@ func NewConfig(app string) *Config {
 	}
 
 	return cfg
-}
-
-func (c *Config) String() string {
-	return fmt.Sprintf("%+v", c)
 }
