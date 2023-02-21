@@ -15,6 +15,7 @@ const urlProtocol = "http://"
 
 func Run(cfg *configs.Config) {
 	lgr := logger.New(cfg.Logger.Level)
+
 	metrics := NewMetrics()
 
 	client := resty.New().SetBaseURL(urlProtocol + cfg.Agent.ServerURL)

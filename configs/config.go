@@ -211,10 +211,6 @@ func NewConfig(app string) *Config {
 	case ServerConfig:
 		cfg = defaultServerCfg()
 
-		flags = new(Config)
-		flags.parseFlags(ServerConfig)
-		cfg.updateServerConfigs(flags)
-
 		envs = new(Config)
 		_ = cleanenv.ReadEnv(envs)
 		cfg.updateServerConfigs(envs)
