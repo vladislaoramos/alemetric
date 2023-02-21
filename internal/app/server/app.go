@@ -1,13 +1,14 @@
 package server
 
 import (
+	"net/http"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/vladislaoramos/alemetric/configs"
 	"github.com/vladislaoramos/alemetric/internal/repo"
 	"github.com/vladislaoramos/alemetric/internal/usecase"
-	"github.com/vladislaoramos/alemetric/pkg/log"
+	logger "github.com/vladislaoramos/alemetric/pkg/log"
 	"github.com/vladislaoramos/alemetric/pkg/postgres"
-	"net/http"
 )
 
 func Run(cfg *configs.Config) {
@@ -42,12 +43,10 @@ func Run(cfg *configs.Config) {
 			lgr.Fatal(err.Error())
 		}
 		defer db.Close()
-		curRepo = repo.NewPostgresRepo(db)
-	} else {
-		curRepo, err = repo.NewMetricsRepo(repoOpts...)
-		if err != nil {
-			lgr.Fatal(err.Error())
-		}
+	}
+	curRepo, err = repo.NewMetricsRepo(repoOpts...)
+	if err != nil {
+		lgr.Fatal(err.Error())
 	}
 
 	handler := chi.NewRouter()
