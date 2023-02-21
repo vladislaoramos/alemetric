@@ -220,5 +220,5 @@ func NewConfig(app string) *Config {
 }
 
 func (c *Config) String() string {
-	return fmt.Sprintf("restore: %v storeFile: %v storeInterval: %v", c.Restore, c.StoreFile, c.StoreInterval)
+	return fmt.Sprintf("%+v", c)
 }
