@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/vladislaoramos/alemetric/configs"
 	"github.com/vladislaoramos/alemetric/internal/app/agent"
@@ -10,8 +11,10 @@ import (
 
 func main() {
 	srvCfg := configs.NewConfig(configs.ServerConfig)
-	lgr := logger.New(srvCfg.Logger.Level)
+	lgr := logger.New(srvCfg.Logger.Level, os.Stdout)
 	lgr.Info(fmt.Sprintf("%+v", *srvCfg))
 
-	agent.Run(configs.NewConfig(configs.AgentConfig))
+	aCfg := configs.NewConfig(configs.AgentConfig)
+
+	agent.Run(aCfg, lgr)
 }

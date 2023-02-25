@@ -11,8 +11,7 @@ import (
 	"github.com/vladislaoramos/alemetric/pkg/postgres"
 )
 
-func Run(cfg *configs.Config) {
-	lgr := logger.New(cfg.Logger.Level)
+func Run(cfg *configs.Config, lgr *logger.Logger) {
 
 	repoOpts := make([]repo.OptionFunc, 0)
 	if cfg.Server.StoreFile != "" {
