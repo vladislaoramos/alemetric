@@ -10,11 +10,9 @@ import (
 )
 
 func main() {
-	srvCfg := configs.NewConfig(configs.ServerConfig)
-	lgr := logger.New(srvCfg.Logger.Level, os.Stdout)
-	lgr.Info(fmt.Sprintf("%+v", *srvCfg))
-
 	aCfg := configs.NewConfig(configs.AgentConfig)
+	lgr := logger.New(aCfg.Logger.Level, os.Stdout)
+	lgr.Info(fmt.Sprintf("%+v", *aCfg))
 
 	agent.Run(aCfg, lgr)
 }
