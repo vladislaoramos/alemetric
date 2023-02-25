@@ -211,8 +211,8 @@ func NewConfig(app string) *Config {
 		cfg = defaultServerCfg()
 
 		flags = new(Config)
-		flags.parseFlags(AgentConfig)
-		cfg.updateAgentConfigs(flags)
+		flags.parseFlags(ServerConfig)
+		cfg.updateServerConfigs(flags)
 
 		envs = new(Config)
 		_ = cleanenv.ReadEnv(envs)
