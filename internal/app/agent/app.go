@@ -12,9 +12,7 @@ import (
 
 const urlProtocol = "http://"
 
-func Run(cfg *configs.Config) {
-	lgr := logger.New(cfg.Logger.Level)
-
+func Run(cfg *configs.Config, lgr *logger.Logger) {
 	metrics := NewMetrics()
 
 	client := resty.New().SetBaseURL(urlProtocol + cfg.Agent.ServerURL)

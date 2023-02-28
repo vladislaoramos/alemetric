@@ -2,7 +2,7 @@ package logger
 
 import (
 	"github.com/sirupsen/logrus"
-	"os"
+	"io"
 	"strings"
 )
 
@@ -18,7 +18,7 @@ type Logger struct {
 	logger *logrus.Logger
 }
 
-func New(level string) *Logger {
+func New(level string, output io.Writer) *Logger {
 	var l logrus.Level
 
 	switch strings.ToLower(level) {
@@ -36,8 +36,7 @@ func New(level string) *Logger {
 
 	logger := logrus.New()
 	logger.SetLevel(l)
-	//logger.SetFormatter(&logrus.JSONFormatter{})
-	logger.SetOutput(os.Stdout)
+	logger.SetOutput(output)
 
 	return &Logger{
 		logger: logger,

@@ -4,8 +4,10 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/vladislaoramos/alemetric/internal/entity"
+	"io"
 	"os"
 	"sync"
 )
@@ -39,6 +41,8 @@ func NewMetricsRepo(options ...OptionFunc) (*MetricsRepo, error) {
 
 func (r *MetricsRepo) GetMetricsNames() []string {
 	var list []string
+	r.Mu.Lock()
+	defer r.Mu.Unlock()
 	for name := range r.storage {
 		list = append(list, name)
 	}
@@ -53,6 +57,8 @@ func (r *MetricsRepo) StoreMetrics(metrics entity.Metrics) error {
 }
 
 func (r *MetricsRepo) GetMetrics(name string) (entity.Metrics, error) {
+	r.Mu.Lock()
+	defer r.Mu.Unlock()
 	value, ok := r.storage[name]
 	if !ok {
 		return entity.Metrics{}, ErrNotFound
@@ -91,6 +97,8 @@ func (r *MetricsRepo) StoreAll() error {
 }
 
 func (r *MetricsRepo) Upload() error {
+	r.Mu.Lock()
+	defer r.Mu.Unlock()
 	file, err := os.OpenFile(r.StoreFilePath, os.O_RDONLY|os.O_CREATE, 0777)
 	if err != nil {
 		return fmt.Errorf("error opening file with metrics: %w", err)
@@ -99,8 +107,11 @@ func (r *MetricsRepo) Upload() error {
 
 	reader := bufio.NewReader(file)
 	data, err := reader.ReadBytes('\n')
-	if err != nil {
+	if err != nil && !errors.Is(err, io.EOF) {
 		return fmt.Errorf("error reading from file with metrics: %w", err)
+	}
+	if errors.Is(err, io.EOF) {
+		return nil
 	}
 
 	err = json.Unmarshal(data, &r.storage)

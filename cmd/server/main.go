@@ -1,14 +1,24 @@
 package main
 
 import (
+	"fmt"
 	"github.com/vladislaoramos/alemetric/configs"
 	"github.com/vladislaoramos/alemetric/internal/app/server"
 	logger "github.com/vladislaoramos/alemetric/pkg/log"
+	"log"
+	"os"
 )
 
 func main() {
-	cfg := configs.NewConfig(configs.ServerConfig)
-	lgr := logger.New(cfg.Logger.Level)
-	lgr.Info(cfg.String())
-	server.Run(cfg)
+	serverCfg := configs.NewConfig(configs.ServerConfig)
+
+	f, err := os.OpenFile("/tmp/log_server", os.O_CREATE|os.O_APPEND|os.O_RDWR, 0777)
+	if err != nil {
+		log.Fatal("unable to open file for log")
+	}
+
+	lgr := logger.New(serverCfg.Logger.Level, f)
+	lgr.Info(fmt.Sprintf("%+v", serverCfg))
+
+	server.Run(serverCfg, lgr)
 }

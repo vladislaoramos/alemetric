@@ -10,9 +10,7 @@ import (
 	"net/http"
 )
 
-func Run(cfg *configs.Config) {
-	lgr := logger.New(cfg.Logger.Level)
-
+func Run(cfg *configs.Config, lgr *logger.Logger) {
 	repoOpts := make([]repo.OptionFunc, 0)
 	if cfg.Server.StoreFile != "" {
 		repoOpts = append(repoOpts, repo.StoreFilePath(cfg.Server.StoreFile))
@@ -42,12 +40,11 @@ func Run(cfg *configs.Config) {
 			lgr.Fatal(err.Error())
 		}
 		defer db.Close()
-		curRepo = repo.NewPostgresRepo(db)
-	} else {
-		curRepo, err = repo.NewMetricsRepo(repoOpts...)
-		if err != nil {
-			lgr.Fatal(err.Error())
-		}
+	}
+
+	curRepo, err = repo.NewMetricsRepo(repoOpts...)
+	if err != nil {
+		lgr.Fatal(err.Error())
 	}
 
 	handler := chi.NewRouter()
