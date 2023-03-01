@@ -137,6 +137,10 @@ func (c *Config) updateAgentConfigs(v *Config) {
 	if v.Level != "" && c.Level != v.Level {
 		c.Level = v.Level
 	}
+
+	if v.Agent.Key != "" && c.Agent.Key != v.Agent.Key {
+		c.Agent.Key = v.Agent.Key
+	}
 }
 
 func (c *Config) updateServerConfigs(v *Config) {
@@ -166,6 +170,10 @@ func (c *Config) updateServerConfigs(v *Config) {
 
 	if v.Database.URL != "" && c.Database.URL != v.Database.URL {
 		c.Database.URL = v.Database.URL
+	}
+
+	if v.Server.Key != "" && c.Server.Key != v.Server.Key {
+		c.Server.Key = v.Server.Key
 	}
 }
 

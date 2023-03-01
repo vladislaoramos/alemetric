@@ -127,7 +127,10 @@ func (mt *ToolUseCase) GetMetrics(metrics entity.Metrics) (entity.Metrics, error
 		return res, fmt.Errorf("MetricsTool - Metric: %w", err)
 	}
 
-	res.SignData(mt.encryptionKey)
+	//res.SignData(mt.encryptionKey)
+	//if !res.CheckDataSign(mt.encryptionKey) {
+	//	return res, ErrDataSignNotEqual
+	//}
 
 	return res, nil
 }
