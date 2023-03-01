@@ -30,7 +30,7 @@ func NewMetricsRepo(options ...OptionFunc) (*MetricsRepo, error) {
 	}
 
 	if metricsRepo.Restore {
-		err := metricsRepo.Upload()
+		err := metricsRepo.Upload(context.TODO())
 		if err != nil {
 			return nil, err
 		}
@@ -39,7 +39,7 @@ func NewMetricsRepo(options ...OptionFunc) (*MetricsRepo, error) {
 	return metricsRepo, nil
 }
 
-func (r *MetricsRepo) GetMetricsNames() []string {
+func (r *MetricsRepo) GetMetricsNames(_ context.Context) []string {
 	var list []string
 	r.Mu.Lock()
 	defer r.Mu.Unlock()
@@ -49,14 +49,14 @@ func (r *MetricsRepo) GetMetricsNames() []string {
 	return list
 }
 
-func (r *MetricsRepo) StoreMetrics(metrics entity.Metrics) error {
+func (r *MetricsRepo) StoreMetrics(_ context.Context, metrics entity.Metrics) error {
 	r.Mu.Lock()
 	r.storage[metrics.ID] = metrics
 	r.Mu.Unlock()
 	return nil
 }
 
-func (r *MetricsRepo) GetMetrics(name string) (entity.Metrics, error) {
+func (r *MetricsRepo) GetMetrics(_ context.Context, name string) (entity.Metrics, error) {
 	r.Mu.Lock()
 	defer r.Mu.Unlock()
 	value, ok := r.storage[name]
@@ -96,7 +96,7 @@ func (r *MetricsRepo) StoreAll() error {
 	return nil
 }
 
-func (r *MetricsRepo) Upload() error {
+func (r *MetricsRepo) Upload(_ context.Context) error {
 	r.Mu.Lock()
 	defer r.Mu.Unlock()
 	file, err := os.OpenFile(r.StoreFilePath, os.O_RDONLY|os.O_CREATE, 0777)

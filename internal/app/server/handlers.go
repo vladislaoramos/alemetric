@@ -13,7 +13,7 @@ import (
 
 func getMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterface) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		names, err := tool.GetMetricsNames()
+		names, err := tool.GetMetricsNames(r.Context())
 		if err != nil {
 			l.Error(fmt.Errorf("error with getting metrics: %w", err).Error())
 			errorHandler(w, err)
@@ -34,7 +34,7 @@ func updateSeveralMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterfac
 		}
 
 		for _, item := range items {
-			if err := tool.StoreMetrics(item); err != nil {
+			if err := tool.StoreMetrics(r.Context(), item); err != nil {
 				l.Error(fmt.Errorf("error with updating metrics: %w", err).Error())
 				errorHandler(w, err)
 				return
@@ -54,13 +54,13 @@ func updateMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterface) http
 			return
 		}
 
-		if err := tool.StoreMetrics(metrics); err != nil {
+		if err := tool.StoreMetrics(r.Context(), metrics); err != nil {
 			l.Error(fmt.Errorf("error with updating metrics: %w", err).Error())
 			errorHandler(w, err)
 			return
 		}
 
-		value, err := tool.GetMetrics(metrics)
+		value, err := tool.GetMetrics(r.Context(), metrics)
 		if err != nil {
 			l.Error(err.Error())
 			errorHandler(w, err)
@@ -101,7 +101,7 @@ func updateSpecificMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterfa
 				Value: &value,
 			}
 
-			err = tool.StoreMetrics(metrics)
+			err = tool.StoreMetrics(r.Context(), metrics)
 			if err != nil {
 				l.Error(fmt.Errorf("error with updating metrics: %w", err).Error())
 				errorHandler(w, err)
@@ -121,7 +121,7 @@ func updateSpecificMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterfa
 				Delta: &value,
 			}
 
-			err = tool.StoreMetrics(metrics)
+			err = tool.StoreMetrics(r.Context(), metrics)
 			if err != nil {
 				l.Error(fmt.Errorf("error with updating metrics: %w", err).Error())
 				errorHandler(w, err)
@@ -152,7 +152,7 @@ func getSomeMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterface) htt
 			return
 		}
 
-		value, err := tool.GetMetrics(metrics)
+		value, err := tool.GetMetrics(r.Context(), metrics)
 		if err != nil {
 			l.Error(err.Error())
 			errorHandler(w, err)
@@ -182,7 +182,7 @@ func getSpecificMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterface)
 			MType: metricsType,
 		}
 
-		res, err := tool.GetMetrics(metrics)
+		res, err := tool.GetMetrics(r.Context(), metrics)
 		if err != nil {
 			l.Error(err.Error())
 			errorHandler(w, err)

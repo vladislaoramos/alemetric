@@ -35,16 +35,23 @@ func Run(cfg *configs.Config, lgr *logger.Logger) {
 		err     error
 	)
 	if cfg.Database.URL != "" {
+		err := applyMigration(cfg.Database.URL, cfg.Database.MigrationDir)
+		if err != nil {
+			lgr.Fatal(err.Error())
+		}
+
 		db, err = postgres.New(cfg.Database.URL)
 		if err != nil {
 			lgr.Fatal(err.Error())
 		}
 		defer db.Close()
-	}
 
-	curRepo, err = repo.NewMetricsRepo(repoOpts...)
-	if err != nil {
-		lgr.Fatal(err.Error())
+		curRepo = repo.NewPostgresRepo(db)
+	} else {
+		curRepo, err = repo.NewMetricsRepo(repoOpts...)
+		if err != nil {
+			lgr.Fatal(err.Error())
+		}
 	}
 
 	handler := chi.NewRouter()
