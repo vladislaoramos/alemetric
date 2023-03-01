@@ -88,21 +88,21 @@ func (mt *ToolUseCase) StoreMetrics(metrics entity.Metrics) error {
 		oldMetric, err := mt.repo.GetMetrics(metrics.ID)
 		if err != nil && !errors.Is(err, repo.ErrNotFound) {
 			return fmt.Errorf("MetricsTool - GetMetric: %w", err)
-		} else {
+		} else if errors.Is(err, repo.ErrNotFound) {
 			var oldDelta entity.Counter
-			if oldMetric.Delta != nil {
-				oldDelta = *oldMetric.Delta
-			}
-			if metrics.Delta == nil {
-				return errors.New("cannot store empty metrics")
-			}
-			delta := *metrics.Delta + oldDelta
+			newDelta := oldDelta + *metrics.Delta
+			metrics.Delta = &newDelta
+		} else {
+			delta := *oldMetric.Delta + *metrics.Delta
 			metrics.Delta = &delta
-			metrics.SignData(mt.encryptionKey)
 		}
+
+		metrics.SignData(mt.encryptionKey)
+
 		if err := mt.repo.StoreMetrics(metrics); err != nil {
 			return fmt.Errorf("MetricsTool - StoreMetric: %w", err)
 		}
+
 	default:
 		return ErrNotImplemented
 	}
