@@ -7,7 +7,7 @@ CREATE TYPE metric_types AS ENUM (
   'gauge'
 );
 
-CREATE TABLE IF NOT EXISTS metrics(
+CREATE TABLE IF NOT EXISTS public.metrics(
     id serial PRIMARY KEY,
     name VARCHAR(255),
     mtype metric_types,
@@ -22,6 +22,6 @@ CREATE TABLE IF NOT EXISTS metrics(
 -- +goose Down
 -- +goose StatementBegin
 SELECT 'down SQL query';
-DROP TABLE metrics;
+DROP TABLE public.metrics;
 DROP TYPE metric_types;
 -- +goose StatementEnd

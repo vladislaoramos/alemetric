@@ -35,7 +35,7 @@ func Run(cfg *configs.Config, lgr *logger.Logger) {
 		err     error
 	)
 	if cfg.Database.URL != "" {
-		err := applyMigration(cfg.Database.URL, cfg.Database.MigrationDir)
+		err := applyMigration(cfg.Database.URL)
 		if err != nil {
 			lgr.Fatal(err.Error())
 		}

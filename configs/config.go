@@ -18,8 +18,7 @@ type Logger struct {
 }
 
 type Database struct {
-	URL          string `env:"DATABASE_DSN"`
-	MigrationDir string
+	URL string `env:"DATABASE_DSN"`
 }
 
 type Agent struct {

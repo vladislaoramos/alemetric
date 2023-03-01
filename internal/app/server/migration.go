@@ -9,7 +9,7 @@ import (
 
 const migrationDir = "migrations"
 
-func applyMigration(dbURL, _ string) error {
+func applyMigration(dbURL string) error {
 	db, err := goose.OpenDBWithDriver("postgres", dbURL)
 	if err != nil {
 		return fmt.Errorf("error open db: %w", err)
