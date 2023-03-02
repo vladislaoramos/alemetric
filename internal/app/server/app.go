@@ -46,12 +46,17 @@ func Run(cfg *configs.Config, lgr *logger.Logger) {
 		}
 		defer db.Close()
 
-		curRepo = repo.NewPostgresRepo(db)
+		//curRepo = repo.NewPostgresRepo(db)
 	} else {
-		curRepo, err = repo.NewMetricsRepo(repoOpts...)
-		if err != nil {
-			lgr.Fatal(err.Error())
-		}
+		//curRepo, err = repo.NewMetricsRepo(repoOpts...)
+		//if err != nil {
+		//	lgr.Fatal(err.Error())
+		//}
+	}
+
+	curRepo, err = repo.NewMetricsRepo(repoOpts...)
+	if err != nil {
+		lgr.Fatal(err.Error())
 	}
 
 	handler := chi.NewRouter()
