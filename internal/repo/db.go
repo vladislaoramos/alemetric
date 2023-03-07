@@ -13,13 +13,39 @@ type PostgresRepo struct {
 	*postgres.DB
 }
 
-func NewPostgresRepo(pg *postgres.DB) *PostgresRepo {
-	return &PostgresRepo{pg}
+const createMetricsTable = `
+	CREATE TABLE IF NOT EXISTS metrics (
+    		id VARCHAR(256),
+		    mtype VARCHAR(10),
+		    value NUMERIC,
+		    delta BIGINT,
+			hash  varchar,
+		    UNIQUE (id, mtype)
+		);
+		CREATE UNIQUE INDEX IF NOT EXISTS id_mtype_index
+		ON metrics (id, mtype)
+	`
+
+func createTable(pg *postgres.DB) error {
+	_, err := pg.Pool.Exec(context.Background(), createMetricsTable)
+	if err != nil {
+		return fmt.Errorf("error creating metrics table into db: %w", err)
+	}
+	return nil
+}
+
+func NewPostgresRepo(pg *postgres.DB) (*PostgresRepo, error) {
+	err := createTable(pg)
+	if err != nil {
+		return nil, err
+	}
+	return &PostgresRepo{pg}, nil
 }
 
 func (r *PostgresRepo) GetMetricsNames(ctx context.Context) []string {
 	res := make([]string, 0)
-	pgxscan.Select(ctx, r.Pool, &res, "select name from public.metrics;")
+	pgxscan.Select(ctx, r.Pool, &res, "select name from metrics;")
+
 	return res
 }
 
@@ -31,7 +57,7 @@ func (r *PostgresRepo) GetMetrics(ctx context.Context, name string) (entity.Metr
 			"delta",
 			"value",
 			"hash").
-		From("public.metrics").
+		From("metrics").
 		Where(sq.Eq{"name": name}).
 		ToSql()
 	if err != nil {
@@ -52,7 +78,7 @@ func (r *PostgresRepo) GetMetrics(ctx context.Context, name string) (entity.Metr
 
 func (r *PostgresRepo) StoreMetrics(ctx context.Context, metrics entity.Metrics) error {
 	updateQuery, updateArgs, err := r.Builder.
-		Update("public.metrics").
+		Update("metrics").
 		Set("delta", metrics.Delta).
 		Set("value", metrics.Value).
 		Where(sq.Eq{"name": metrics.ID}).
@@ -63,7 +89,7 @@ func (r *PostgresRepo) StoreMetrics(ctx context.Context, metrics entity.Metrics)
 	}
 
 	insertQuery, insertArgs, err := r.Builder.
-		Insert("public.metrics").
+		Insert("metrics").
 		Columns(
 			"name",
 			"mtype",
