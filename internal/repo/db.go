@@ -13,32 +13,7 @@ type PostgresRepo struct {
 	*postgres.DB
 }
 
-const createMetricsTable = `
-	CREATE TABLE IF NOT EXISTS metrics (
-    		id VARCHAR(256),
-		    mtype VARCHAR(10),
-		    value NUMERIC,
-		    delta BIGINT,
-			hash  varchar,
-		    UNIQUE (id, mtype)
-		);
-		CREATE UNIQUE INDEX IF NOT EXISTS id_mtype_index
-		ON metrics (id, mtype)
-	`
-
-func createTable(pg *postgres.DB) error {
-	_, err := pg.Pool.Exec(context.Background(), createMetricsTable)
-	if err != nil {
-		return fmt.Errorf("error creating metrics table into db: %w", err)
-	}
-	return nil
-}
-
 func NewPostgresRepo(pg *postgres.DB) (*PostgresRepo, error) {
-	err := createTable(pg)
-	if err != nil {
-		return nil, err
-	}
 	return &PostgresRepo{pg}, nil
 }
 
@@ -81,6 +56,7 @@ func (r *PostgresRepo) StoreMetrics(ctx context.Context, metrics entity.Metrics)
 		Update("metrics").
 		Set("delta", metrics.Delta).
 		Set("value", metrics.Value).
+		Set("hash", metrics.Hash).
 		Where(sq.Eq{"name": metrics.ID}).
 		ToSql()
 
