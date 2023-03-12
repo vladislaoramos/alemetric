@@ -29,7 +29,7 @@ type Metrics struct {
 func ParseGaugeMetrics(value string) (Gauge, error) {
 	s, err := strconv.ParseFloat(value, 64)
 	if err != nil {
-		return 0, fmt.Errorf("error with ParseGaugeMetrics: strconv.ParseFloat cannot parse: %w", err)
+		return 0, fmt.Errorf("ParseGaugeMetrics - strconv.ParseFloat cannot parse: %w", err)
 	}
 
 	return Gauge(s), nil
@@ -38,7 +38,7 @@ func ParseGaugeMetrics(value string) (Gauge, error) {
 func ParseCounterMetrics(value string) (Counter, error) {
 	s, err := strconv.Atoi(value)
 	if err != nil {
-		return 0, fmt.Errorf("error with ParseCounterMetrics strconv.Atoi cannot parse: %w", err)
+		return 0, fmt.Errorf("ParseCounterMetrics - strconv.Atoi cannot parse: %w", err)
 	}
 	return Counter(s), nil
 }

@@ -16,7 +16,7 @@ func getMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterface) http.Ha
 	return func(w http.ResponseWriter, r *http.Request) {
 		names, err := tool.GetMetricsNames(r.Context())
 		if err != nil {
-			l.Error(fmt.Errorf("error with getting metrics: %w", err).Error())
+			l.Error(fmt.Sprintf("Handlers - GetMetrics - Error: %s", err.Error()))
 			errorHandler(w, err)
 			return
 		}
@@ -30,7 +30,7 @@ func updateSeveralMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterfac
 	return func(w http.ResponseWriter, r *http.Request) {
 		var items []entity.Metrics
 		if err := json.NewDecoder(r.Body).Decode(&items); err != nil {
-			http.Error(w, "error with decoding metrics", http.StatusBadRequest)
+			http.Error(w, "error decoding several metrics", http.StatusBadRequest)
 			return
 		}
 
@@ -51,7 +51,7 @@ func updateMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterface) http
 	return func(w http.ResponseWriter, r *http.Request) {
 		var metrics entity.Metrics
 		if err := json.NewDecoder(r.Body).Decode(&metrics); err != nil {
-			http.Error(w, "error with decoding metrics", http.StatusBadRequest)
+			http.Error(w, "error decoding metrics", http.StatusBadRequest)
 			return
 		}
 
@@ -104,7 +104,7 @@ func updateSpecificMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterfa
 
 			err = tool.StoreMetrics(r.Context(), metrics)
 			if err != nil {
-				l.Error(fmt.Errorf("error with updating metrics: %w", err).Error())
+				l.Error(fmt.Sprintf("Handlers - UpdateSpecificMetrics - Error: %s", err.Error()))
 				errorHandler(w, err)
 				return
 			}
@@ -124,13 +124,13 @@ func updateSpecificMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterfa
 
 			err = tool.StoreMetrics(r.Context(), metrics)
 			if err != nil {
-				l.Error(fmt.Errorf("error with updating metrics: %w", err).Error())
+				l.Error(fmt.Sprintf("Handlers - UpdateSpecificMetrics - Error: %s", err.Error()))
 				errorHandler(w, err)
 				return
 			}
 		default:
-			l.Error(fmt.Errorf("metrics type is not found: %s", metricsName).Error())
-			http.Error(w, "metrics type is not found", http.StatusNotImplemented)
+			l.Error(fmt.Sprintf("Handlers - UpdateSpecificMetrics - Metrics Type: %s", metricsType))
+			http.Error(w, "metrics type not found", http.StatusNotImplemented)
 		}
 
 		resp, err := json.Marshal(metrics)
@@ -149,7 +149,7 @@ func getSomeMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterface) htt
 	return func(w http.ResponseWriter, r *http.Request) {
 		var metrics entity.Metrics
 		if err := json.NewDecoder(r.Body).Decode(&metrics); err != nil {
-			http.Error(w, "error with decoding metrics", http.StatusBadRequest)
+			http.Error(w, "error decoding metrics during get", http.StatusBadRequest)
 			return
 		}
 
@@ -215,8 +215,8 @@ func getSpecificMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterface)
 func pingHandler(tool *usecase.ToolUseCase, l logger.LogInterface) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := tool.PingRepo(r.Context()); err != nil {
-			l.Error(fmt.Errorf("error with database connection: %w", err).Error())
-			http.Error(w, "repo error", http.StatusInternalServerError)
+			l.Error(fmt.Sprintf("Handlers - PignHandlers - DB Connection Error: %s", err.Error()))
+			http.Error(w, "error db connection", http.StatusInternalServerError)
 			return
 		}
 		w.WriteHeader(http.StatusOK)

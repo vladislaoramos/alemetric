@@ -1,13 +1,14 @@
 package agent
 
 import (
-	"github.com/go-resty/resty/v2"
-	"github.com/vladislaoramos/alemetric/configs"
-	logger "github.com/vladislaoramos/alemetric/pkg/log"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/go-resty/resty/v2"
+	"github.com/vladislaoramos/alemetric/configs"
+	logger "github.com/vladislaoramos/alemetric/pkg/log"
 )
 
 const urlProtocol = "http://"
@@ -31,5 +32,5 @@ func Run(cfg *configs.Config, lgr *logger.Logger) {
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	stop := <-sigs
 
-	lgr.Info("agent got stop signal: " + stop.String())
+	lgr.Info("Agent got stop signal: " + stop.String())
 }

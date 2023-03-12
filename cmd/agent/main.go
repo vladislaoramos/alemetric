@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/vladislaoramos/alemetric/configs"
 	"github.com/vladislaoramos/alemetric/internal/app/agent"
 	logger "github.com/vladislaoramos/alemetric/pkg/log"
-	"os"
 )
 
 func main() {

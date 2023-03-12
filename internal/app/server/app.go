@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/vladislaoramos/alemetric/configs"
 	"github.com/vladislaoramos/alemetric/internal/repo"
@@ -43,19 +44,23 @@ func Run(cfg *configs.Config, lgr *logger.Logger) {
 		err := runMigration(cfg.Database.URL, cfg.Database.MigrationDir)
 >>>>>>> origin/increment12
 		if err != nil {
-			lgr.Fatal(err.Error())
+			lgr.Fatal(fmt.Sprintf("Server - Run Migration - Error: %s", err.Error()))
 		}
 
 		db, err = postgres.New(cfg.Database.URL)
 		if err != nil {
-			lgr.Fatal(err.Error())
+			lgr.Fatal(fmt.Sprintf("Server - PostgreSQL Init - Error: %s", err.Error()))
 		}
 		defer db.Close()
 
+<<<<<<< HEAD
 		curRepo, err = repo.NewPostgresRepo(db)
 		if err != nil {
 			lgr.Fatal(err.Error())
 		}
+=======
+		curRepo = repo.NewPostgresRepo(db)
+>>>>>>> increment13
 	} else {
 		curRepo, err = repo.NewMetricsRepo(repoOpts...)
 		if err != nil {

@@ -60,9 +60,9 @@ func (mt *ToolUseCase) saveStorage() {
 		<-mt.C
 		err := mt.repo.StoreAll()
 		if err != nil {
-			mt.logger.Error(fmt.Sprintf("error while writing to file: %s", err))
+			mt.logger.Error(fmt.Sprintf("error while writing to storage: %s", err))
 		} else {
-			mt.logger.Info("store metric success")
+			mt.logger.Info("successful saving of metrics")
 		}
 	}
 }

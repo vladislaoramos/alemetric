@@ -2,12 +2,13 @@ package server
 
 import (
 	"fmt"
+	"net/http"
+	"runtime/debug"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/vladislaoramos/alemetric/internal/usecase"
-	"github.com/vladislaoramos/alemetric/pkg/log"
-	"net/http"
-	"runtime/debug"
+	logger "github.com/vladislaoramos/alemetric/pkg/log"
 )
 
 const (
