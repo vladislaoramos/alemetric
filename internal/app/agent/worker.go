@@ -1,12 +1,16 @@
 package agent
 
 import (
+	"errors"
 	"fmt"
-	"github.com/vladislaoramos/alemetric/internal/entity"
-	"github.com/vladislaoramos/alemetric/pkg/log"
+	"io"
 	"reflect"
 	"strings"
 	"time"
+
+	logger "github.com/vladislaoramos/alemetric/pkg/log"
+
+	"github.com/vladislaoramos/alemetric/internal/entity"
 )
 
 type Worker struct {
@@ -70,6 +74,11 @@ func (w *Worker) SendMetrics(ticker *time.Ticker) {
 			go func(metricsName, metricsType string, delta *entity.Counter, value *entity.Gauge) {
 				err := w.webAPI.SendMetrics(metricsName, metricsType, delta, value)
 				if err != nil {
+					if errors.Is(err, io.EOF) {
+						w.l.Error(fmt.Sprintf("\nmetricName: %s\nmetricType: %s\ndelta: %v\nvalue: %v\n",
+							metricsName, metricsType, delta, value,
+						))
+					}
 					w.l.Error(fmt.Sprintf("error sending metrics conflict: %s", err))
 				}
 			}(name, fieldType, valCounter, valGauge)
