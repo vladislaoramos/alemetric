@@ -1,9 +1,7 @@
 package agent
 
 import (
-	"errors"
 	"fmt"
-	"io"
 	"reflect"
 	"strings"
 	"time"
@@ -71,15 +69,12 @@ func (w *Worker) SendMetrics(ticker *time.Ticker) {
 				continue
 			}
 
+			time.Sleep(time.Second)
 			go func(metricsName, metricsType string, delta *entity.Counter, value *entity.Gauge) {
 				err := w.webAPI.SendMetrics(metricsName, metricsType, delta, value)
 				if err != nil {
-					if errors.Is(err, io.EOF) {
-						w.l.Error(fmt.Sprintf("\nmetricName: %s\nmetricType: %s\ndelta: %v\nvalue: %v\n",
-							metricsName, metricsType, delta, value,
-						))
-					}
-					w.l.Error(fmt.Sprintf("error sending metrics conflict: %s", err))
+					w.l.Error(fmt.Sprintf("error sending metrics conflict: %v; metricName: %s metricType: %s delta: %v value: %v", err,
+						metricsName, metricsType, delta, value))
 				}
 			}(name, fieldType, valCounter, valGauge)
 		}
