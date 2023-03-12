@@ -3,12 +3,13 @@ package server
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"strings"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/vladislaoramos/alemetric/internal/entity"
 	"github.com/vladislaoramos/alemetric/internal/usecase"
 	logger "github.com/vladislaoramos/alemetric/pkg/log"
-	"net/http"
-	"strings"
 )
 
 func getMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterface) http.HandlerFunc {
@@ -165,6 +166,11 @@ func getSomeMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterface) htt
 			errorHandler(w, err)
 			return
 		}
+
+		fmt.Printf(`getSomeMetrics:
+			original struct: %+v
+			json: %s
+		`, value, string(resp))
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
