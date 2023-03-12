@@ -128,6 +128,9 @@ func (mt *ToolUseCase) GetMetrics(ctx context.Context, metrics entity.Metrics) (
 		return res, fmt.Errorf("error getting metrics: %w", err)
 	}
 
+	if mt.encryptionKey != "" && res.Hash == "" {
+		res.SignData("server", mt.encryptionKey)
+	}
 	return res, nil
 }
 
