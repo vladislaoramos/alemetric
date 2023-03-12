@@ -30,7 +30,7 @@ func updateSeveralMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterfac
 	return func(w http.ResponseWriter, r *http.Request) {
 		var items []entity.Metrics
 		if err := json.NewDecoder(r.Body).Decode(&items); err != nil {
-			http.Error(w, "error decoding several metrics", http.StatusBadRequest)
+			http.Error(w, "error decoding several metrics: "+err.Error(), http.StatusBadRequest)
 			return
 		}
 
@@ -42,7 +42,6 @@ func updateSeveralMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterfac
 			}
 		}
 
-		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 	}
 }

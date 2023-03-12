@@ -81,7 +81,7 @@ func (mt *ToolUseCase) StoreMetrics(ctx context.Context, metrics entity.Metrics)
 	case Gauge:
 		if err := mt.repo.StoreMetrics(ctx, metrics); err != nil {
 			if errors.Is(err, repo.ErrNotFound) {
-				return ErrNotFound
+				return fmt.Errorf("store metrics: %w", ErrNotFound)
 			}
 			return fmt.Errorf("error store metrics: %w", err)
 		}

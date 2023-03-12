@@ -40,8 +40,6 @@ func NewRouter(handler *chi.Mux, tool *usecase.ToolUseCase, l logger.LogInterfac
 
 	handler.Get("/", getMetricsHandler(tool, l))
 
-	handler.Get("/ping", pingHandler(tool, l))
-
 	// update
 	handler.Post("/updates/", updateSeveralMetricsHandler(tool, l))
 	handler.Route("/update", func(r chi.Router) {

@@ -50,7 +50,6 @@ func gzipWriteHandler(next http.Handler) http.Handler {
 		defer gz.Close()
 
 		w.Header().Set("Content-Encoding", "gzip")
-		w.Header().Set("Content-Type", "application/json")
 		next.ServeHTTP(
 			gzipWriter{
 				ResponseWriter: w,
