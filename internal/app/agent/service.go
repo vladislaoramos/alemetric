@@ -37,10 +37,8 @@ func (wc *WebAPIClient) SendMetrics(
 
 	body.SignData("agent", wc.Key)
 
-	respBody, err := json.Marshal(body)
-	if err != nil {
-		log.Printf("req body: %s", string(respBody))
-	}
+	respBody, _ := json.Marshal(body)
+	log.Printf("req body: %s", string(respBody))
 
 	resp, err := wc.client.
 		R().
