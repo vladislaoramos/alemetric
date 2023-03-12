@@ -2,13 +2,14 @@ package server
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/vladislaoramos/alemetric/configs"
 	"github.com/vladislaoramos/alemetric/internal/repo"
 	"github.com/vladislaoramos/alemetric/internal/usecase"
-	"github.com/vladislaoramos/alemetric/pkg/log"
+	logger "github.com/vladislaoramos/alemetric/pkg/log"
 	"github.com/vladislaoramos/alemetric/pkg/postgres"
-	"net/http"
 )
 
 func Run(cfg *configs.Config, lgr *logger.Logger) {
@@ -30,7 +31,6 @@ func Run(cfg *configs.Config, lgr *logger.Logger) {
 		mtOptions = append(mtOptions, usecase.CheckDataSign(cfg.Server.Key))
 	}
 
-<<<<<<< HEAD
 	var (
 		curRepo usecase.MetricsRepo
 		db      *postgres.DB
@@ -38,11 +38,6 @@ func Run(cfg *configs.Config, lgr *logger.Logger) {
 	)
 	if cfg.Database.URL != "" {
 		err := applyMigration(cfg.Database.URL)
-=======
-	var curRepo usecase.MetricsRepo
-	if cfg.Database.URL != "" {
-		err := runMigration(cfg.Database.URL, cfg.Database.MigrationDir)
->>>>>>> origin/increment12
 		if err != nil {
 			lgr.Fatal(fmt.Sprintf("Server - Run Migration - Error: %s", err.Error()))
 		}
@@ -53,14 +48,10 @@ func Run(cfg *configs.Config, lgr *logger.Logger) {
 		}
 		defer db.Close()
 
-<<<<<<< HEAD
 		curRepo, err = repo.NewPostgresRepo(db)
 		if err != nil {
 			lgr.Fatal(err.Error())
 		}
-=======
-		curRepo = repo.NewPostgresRepo(db)
->>>>>>> increment13
 	} else {
 		curRepo, err = repo.NewMetricsRepo(repoOpts...)
 		if err != nil {
