@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/vladislaoramos/alemetric/internal/entity"
 	"github.com/vladislaoramos/alemetric/internal/repo"
-	"github.com/vladislaoramos/alemetric/pkg/log"
-	"time"
+	logger "github.com/vladislaoramos/alemetric/pkg/log"
 )
 
 const (
@@ -97,7 +98,7 @@ func (mt *ToolUseCase) StoreMetrics(ctx context.Context, metrics entity.Metrics)
 			metrics.Delta = &delta
 		}
 
-		metrics.SignData(mt.encryptionKey)
+		metrics.SignData("server", mt.encryptionKey)
 
 		if err := mt.repo.StoreMetrics(ctx, metrics); err != nil {
 			return fmt.Errorf("error storing metrics: %w", err)

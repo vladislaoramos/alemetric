@@ -4,6 +4,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"fmt"
+	"log"
 	"strconv"
 )
 
@@ -50,10 +51,13 @@ func (c Counter) Type() string {
 	return counter
 }
 
-func (m *Metrics) SignData(key string) {
+func (m *Metrics) SignData(app, key string) {
 	if key != "" {
 		m.Hash = m.hash(key)
+		log.Printf("%s: for metric %s made hash %s via key %s\n", app, m.ID, m.Hash, key)
+		return
 	}
+	log.Printf("%s: signing key is not defined\n", app)
 }
 
 func (m *Metrics) hash(key string) string {

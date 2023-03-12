@@ -2,9 +2,10 @@ package agent
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/go-resty/resty/v2"
 	"github.com/vladislaoramos/alemetric/internal/entity"
-	"net/http"
 )
 
 type WebAPIClient struct {
@@ -32,7 +33,7 @@ func (wc *WebAPIClient) SendMetrics(
 		Value: value,
 	}
 
-	body.SignData(wc.Key)
+	body.SignData("agent", wc.Key)
 
 	resp, err := wc.client.
 		R().
