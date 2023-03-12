@@ -1,7 +1,9 @@
 package agent
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/go-resty/resty/v2"
@@ -34,6 +36,11 @@ func (wc *WebAPIClient) SendMetrics(
 	}
 
 	body.SignData("agent", wc.Key)
+
+	respBody, err := json.Marshal(body)
+	if err != nil {
+		log.Printf("req body: %s", string(respBody))
+	}
 
 	resp, err := wc.client.
 		R().
