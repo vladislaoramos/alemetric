@@ -2,9 +2,10 @@ package postgres
 
 import (
 	"context"
-	"github.com/Masterminds/squirrel"
 	"log"
 	"time"
+
+	"github.com/Masterminds/squirrel"
 
 	"github.com/jackc/pgx/v4/pgxpool"
 )

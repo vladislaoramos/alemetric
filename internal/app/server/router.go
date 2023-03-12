@@ -35,6 +35,8 @@ func NewRouter(handler *chi.Mux, tool *usecase.ToolUseCase, l logger.LogInterfac
 	handler.Use(gzipWriteHandler)
 	handler.Use(gzipReadHandler)
 
+	handler.Get("/ping", pingHandler(tool, l))
+
 	handler.Get("/", getMetricsHandler(tool, l))
 
 	handler.Get("/ping", pingHandler(tool, l))

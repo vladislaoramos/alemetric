@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"os"
+
 	"github.com/vladislaoramos/alemetric/configs"
 	"github.com/vladislaoramos/alemetric/internal/app/server"
 	logger "github.com/vladislaoramos/alemetric/pkg/log"
-	"log"
-	"os"
 )
 
 func main() {

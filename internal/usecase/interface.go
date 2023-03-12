@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+
 	"github.com/vladislaoramos/alemetric/internal/entity"
 )
 

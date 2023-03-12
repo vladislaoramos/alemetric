@@ -30,10 +30,14 @@ func NewMetricsRepo(options ...OptionFunc) (*MetricsRepo, error) {
 	}
 
 	if metricsRepo.Restore {
+<<<<<<< HEAD
 		err := metricsRepo.Upload(context.TODO())
 		if err != nil {
 			return nil, err
 		}
+=======
+		metricsRepo.Upload()
+>>>>>>> origin/increment12
 	}
 
 	return metricsRepo, nil
@@ -122,6 +126,10 @@ func (r *MetricsRepo) Upload(_ context.Context) error {
 	return nil
 }
 
+<<<<<<< HEAD
 func (r *MetricsRepo) Ping(_ context.Context) error {
+=======
+func (r *MetricsRepo) Ping(ctx context.Context) error {
+>>>>>>> origin/increment12
 	return nil
 }

@@ -29,6 +29,7 @@ func Run(cfg *configs.Config, lgr *logger.Logger) {
 		mtOptions = append(mtOptions, usecase.CheckDataSign(cfg.Server.Key))
 	}
 
+<<<<<<< HEAD
 	var (
 		curRepo usecase.MetricsRepo
 		db      *postgres.DB
@@ -36,6 +37,11 @@ func Run(cfg *configs.Config, lgr *logger.Logger) {
 	)
 	if cfg.Database.URL != "" {
 		err := applyMigration(cfg.Database.URL)
+=======
+	var curRepo usecase.MetricsRepo
+	if cfg.Database.URL != "" {
+		err := runMigration(cfg.Database.URL, cfg.Database.MigrationDir)
+>>>>>>> origin/increment12
 		if err != nil {
 			lgr.Fatal(err.Error())
 		}
