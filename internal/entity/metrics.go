@@ -57,7 +57,7 @@ func (m *Metrics) SignData(app, key string) {
 		log.Printf("%s: for metric %s made hash %s via key %s\n", app, m.ID, m.Hash, key)
 		return
 	}
-	log.Printf("%s: signing key is not defined\n", app)
+	// log.Printf("%s: signing key is not defined\n", app)
 }
 
 func (m *Metrics) hash(key string) string {

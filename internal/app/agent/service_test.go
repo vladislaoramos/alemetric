@@ -10,6 +10,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const noEncryptionKey = ""
+
 func TestNewWebAPI(t *testing.T) {
 	tests := []struct {
 		name string
@@ -24,7 +26,7 @@ func TestNewWebAPI(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := NewWebAPI(tt.args, "")
+			got := NewWebAPI(tt.args, noEncryptionKey)
 			require.Equal(t, got, tt.want)
 		})
 	}
@@ -77,7 +79,7 @@ func TestWebAPI_SendMetric(t *testing.T) {
 				serverURL = testServer.URL
 			}
 
-			webAPI := &WebAPIClient{resty.New().SetBaseURL(serverURL), ""}
+			webAPI := &WebAPIClient{resty.New().SetBaseURL(serverURL), noEncryptionKey}
 
 			val := entity.Gauge(tt.args.metricsValue)
 
