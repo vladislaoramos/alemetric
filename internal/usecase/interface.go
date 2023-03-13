@@ -1,19 +1,23 @@
 package usecase
 
 import (
+	"context"
+
 	"github.com/vladislaoramos/alemetric/internal/entity"
 )
 
 type MetricsTool interface {
-	GetMetricsNames() ([]string, error)
-	StoreMetrics(entity.Metrics) error
-	GetMetrics(entity.Metrics) (entity.Metrics, error)
+	GetMetricsNames(context.Context) ([]string, error)
+	StoreMetrics(context.Context, entity.Metrics) error
+	GetMetrics(context.Context, entity.Metrics) (entity.Metrics, error)
+	PingRepo(context.Context) error
 }
 
 type MetricsRepo interface {
-	StoreMetrics(entity.Metrics) error
-	GetMetrics(string) (entity.Metrics, error)
-	GetMetricsNames() []string
-	StoreToFile() error
-	UploadFromFile() error
+	StoreMetrics(context.Context, entity.Metrics) error
+	GetMetrics(context.Context, string) (entity.Metrics, error)
+	GetMetricsNames(ctx context.Context) []string
+	StoreAll() error
+	Upload(context.Context) error
+	Ping(context.Context) error
 }

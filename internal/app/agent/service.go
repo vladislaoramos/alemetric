@@ -2,18 +2,21 @@ package agent
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/go-resty/resty/v2"
 	"github.com/vladislaoramos/alemetric/internal/entity"
-	"net/http"
 )
 
 type WebAPIClient struct {
 	client *resty.Client
+	Key    string
 }
 
-func NewWebAPI(client *resty.Client) *WebAPIClient {
+func NewWebAPI(client *resty.Client, key string) *WebAPIClient {
 	return &WebAPIClient{
 		client: client,
+		Key:    key,
 	}
 }
 
@@ -30,19 +33,41 @@ func (wc *WebAPIClient) SendMetrics(
 		Value: value,
 	}
 
+	body.SignData("agent", wc.Key)
+
+	// respBody, _ := json.Marshal(body)
+	// log.Printf("req body: %s", string(respBody))
+
 	resp, err := wc.client.
 		R().
 		SetHeader("Content-Type", "application/json").
 		SetBody(body).
 		Post("/update/")
 	if err != nil {
-		return fmt.Errorf("cannot send metrics because of error: %w", err)
+		return fmt.Errorf("cannot send metrics from agent: %w", err)
 	}
 
 	status := resp.StatusCode()
 	if status != http.StatusOK {
-		return fmt.Errorf("error sending metrics with status code: %d", status)
+		return fmt.Errorf("sending metrics from agent with not successful status code: %d", status)
 	}
 
+	return nil
+}
+
+func (wc *WebAPIClient) SendSeveralMetrics(items []entity.Metrics) error {
+	resp, err := wc.client.
+		R().
+		SetHeader("Content-Type", "application/json").
+		SetBody(items).
+		Post("/updates/")
+	if err != nil {
+		return fmt.Errorf("cannot send several metrics from agent: %w", err)
+	}
+
+	status := resp.StatusCode()
+	if status != http.StatusOK {
+		return fmt.Errorf("sending several metrics from agent with not successful status code: %d", status)
+	}
 	return nil
 }

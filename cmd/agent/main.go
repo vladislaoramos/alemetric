@@ -1,23 +1,18 @@
 package main
 
 import (
-	"flag"
+	"fmt"
+	"os"
+
 	"github.com/vladislaoramos/alemetric/configs"
 	"github.com/vladislaoramos/alemetric/internal/app/agent"
-	"log"
+	logger "github.com/vladislaoramos/alemetric/pkg/log"
 )
 
 func main() {
-	cfg := new(configs.Config)
+	agentCfg := configs.NewConfig(configs.AgentConfig)
+	lgr := logger.New(agentCfg.Logger.Level, os.Stdout)
+	lgr.Info(fmt.Sprintf("%+v", *agentCfg))
 
-	flag.StringVar(&cfg.Agent.ServerURL, "a", cfg.Agent.ServerURL, "server address")
-	flag.DurationVar(&cfg.Agent.ReportInterval, "r", cfg.Agent.ReportInterval, "report interval")
-	flag.DurationVar(&cfg.Agent.PollInterval, "p", cfg.Agent.PollInterval, "poll interval")
-
-	err := configs.Init(cfg)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-
-	agent.Run(cfg)
+	agent.Run(agentCfg, lgr)
 }

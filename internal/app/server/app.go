@@ -1,25 +1,25 @@
 package server
 
 import (
+	"fmt"
+	"net/http"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/vladislaoramos/alemetric/configs"
 	"github.com/vladislaoramos/alemetric/internal/repo"
 	"github.com/vladislaoramos/alemetric/internal/usecase"
-	"github.com/vladislaoramos/alemetric/pkg/log"
-	"net/http"
+	logger "github.com/vladislaoramos/alemetric/pkg/log"
+	"github.com/vladislaoramos/alemetric/pkg/postgres"
 )
 
-func Run(cfg *configs.Config) {
-	lgr := logger.New(cfg.Logger.Level)
-
+func Run(cfg *configs.Config, lgr *logger.Logger) {
 	repoOpts := make([]repo.OptionFunc, 0)
-	if cfg.Server.StoreFile != " " {
+	if cfg.Server.StoreFile != "" {
 		repoOpts = append(repoOpts, repo.StoreFilePath(cfg.Server.StoreFile))
 	}
-	if cfg.Server.Restore && cfg.Server.StoreFile != " " {
+	if cfg.Server.Restore && cfg.Server.StoreFile != "" {
 		repoOpts = append(repoOpts, repo.Restore())
 	}
-	metricsRepo := repo.NewMetricsRepo(repoOpts...)
 
 	mtOptions := make([]usecase.OptionFunc, 0)
 	if cfg.Server.StoreInterval != 0 {
@@ -27,10 +27,41 @@ func Run(cfg *configs.Config) {
 	} else {
 		mtOptions = append(mtOptions, usecase.SyncWriteFile())
 	}
+	if cfg.Server.Key != "" {
+		mtOptions = append(mtOptions, usecase.CheckDataSign(cfg.Server.Key))
+	}
+
+	var (
+		curRepo usecase.MetricsRepo
+		db      *postgres.DB
+		err     error
+	)
+	if cfg.Database.URL != "" {
+		err := applyMigration(cfg.Database.URL)
+		if err != nil {
+			lgr.Fatal(fmt.Sprintf("Server - Run Migration - Error: %s", err.Error()))
+		}
+
+		db, err = postgres.New(cfg.Database.URL)
+		if err != nil {
+			lgr.Fatal(fmt.Sprintf("Server - PostgreSQL Init - Error: %s", err.Error()))
+		}
+		defer db.Close()
+
+		curRepo, err = repo.NewPostgresRepo(db)
+		if err != nil {
+			lgr.Fatal(err.Error())
+		}
+	} else {
+		curRepo, err = repo.NewMetricsRepo(repoOpts...)
+		if err != nil {
+			lgr.Fatal(err.Error())
+		}
+	}
 
 	handler := chi.NewRouter()
 
-	mt := usecase.NewMetricsTool(metricsRepo, lgr, mtOptions...)
+	mt := usecase.NewMetricsTool(curRepo, lgr, mtOptions...)
 	NewRouter(handler, mt, lgr)
 
 	lgr.Fatal(http.ListenAndServe(cfg.Address, handler).Error())

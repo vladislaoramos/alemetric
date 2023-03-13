@@ -3,19 +3,20 @@ package server
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"strings"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/vladislaoramos/alemetric/internal/entity"
 	"github.com/vladislaoramos/alemetric/internal/usecase"
 	logger "github.com/vladislaoramos/alemetric/pkg/log"
-	"net/http"
-	"strings"
 )
 
 func getMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterface) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		names, err := tool.GetMetricsNames()
+		names, err := tool.GetMetricsNames(r.Context())
 		if err != nil {
-			l.Error(fmt.Errorf("error with getting metrics: %w", err).Error())
+			l.Error(fmt.Sprintf("Handlers - GetMetrics - Error: %s", err.Error()))
 			errorHandler(w, err)
 			return
 		}
@@ -29,19 +30,18 @@ func updateSeveralMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterfac
 	return func(w http.ResponseWriter, r *http.Request) {
 		var items []entity.Metrics
 		if err := json.NewDecoder(r.Body).Decode(&items); err != nil {
-			http.Error(w, "error with decoding metrics", http.StatusBadRequest)
+			http.Error(w, "error decoding several metrics: "+err.Error(), http.StatusBadRequest)
 			return
 		}
 
 		for _, item := range items {
-			if err := tool.StoreMetrics(item); err != nil {
+			if err := tool.StoreMetrics(r.Context(), item); err != nil {
 				l.Error(fmt.Errorf("error with updating metrics: %w", err).Error())
 				errorHandler(w, err)
 				return
 			}
 		}
 
-		w.Header().Set("Content-Type", "text/plain")
 		w.WriteHeader(http.StatusOK)
 	}
 }
@@ -50,18 +50,32 @@ func updateMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterface) http
 	return func(w http.ResponseWriter, r *http.Request) {
 		var metrics entity.Metrics
 		if err := json.NewDecoder(r.Body).Decode(&metrics); err != nil {
-			http.Error(w, "error with decoding metrics", http.StatusBadRequest)
+			http.Error(w, "error decoding metrics", http.StatusBadRequest)
 			return
 		}
 
-		if err := tool.StoreMetrics(metrics); err != nil {
+		if err := tool.StoreMetrics(r.Context(), metrics); err != nil {
 			l.Error(fmt.Errorf("error with updating metrics: %w", err).Error())
 			errorHandler(w, err)
 			return
 		}
 
-		w.Header().Set("Content-Type", "text/plain")
-		w.WriteHeader(http.StatusOK)
+		value, err := tool.GetMetrics(r.Context(), metrics)
+		if err != nil {
+			l.Error(err.Error())
+			errorHandler(w, err)
+			return
+		}
+
+		resp, err := json.Marshal(value)
+		if err != nil {
+			l.Error(err.Error())
+			errorHandler(w, err)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(resp)
 	}
 }
 
@@ -71,52 +85,62 @@ func updateSpecificMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterfa
 		metricsName := chi.URLParam(r, "metricsName")
 		metricsValue := chi.URLParam(r, "metricsValue")
 
+		var metrics entity.Metrics
 		switch metricsType {
 		case Gauge:
 			value, err := entity.ParseGaugeMetrics(metricsValue)
 			if err != nil {
-				l.Error(fmt.Errorf("error with parsing metrics: %w", err).Error())
+				l.Error(err.Error())
 				http.Error(w, "parsing error", http.StatusBadRequest)
+				return
 			}
 
-			metrics := entity.Metrics{
+			metrics = entity.Metrics{
 				ID:    metricsName,
 				MType: value.Type(),
 				Value: &value,
 			}
 
-			err = tool.StoreMetrics(metrics)
+			err = tool.StoreMetrics(r.Context(), metrics)
 			if err != nil {
-				l.Error(fmt.Errorf("error with updating metrics: %w", err).Error())
+				l.Error(fmt.Sprintf("Handlers - UpdateSpecificMetrics - Error: %s", err.Error()))
 				errorHandler(w, err)
 				return
 			}
 		case Counter:
 			value, err := entity.ParseCounterMetrics(metricsValue)
 			if err != nil {
-				l.Error(fmt.Errorf("error with parsing metrics: %w", err).Error())
+				l.Error(err.Error())
 				http.Error(w, "parsing error", http.StatusBadRequest)
+				return
 			}
 
-			metrics := entity.Metrics{
+			metrics = entity.Metrics{
 				ID:    metricsName,
 				MType: value.Type(),
 				Delta: &value,
 			}
 
-			err = tool.StoreMetrics(metrics)
+			err = tool.StoreMetrics(r.Context(), metrics)
 			if err != nil {
-				l.Error(fmt.Errorf("error with updating metrics: %w", err).Error())
+				l.Error(fmt.Sprintf("Handlers - UpdateSpecificMetrics - Error: %s", err.Error()))
 				errorHandler(w, err)
 				return
 			}
 		default:
-			l.Error(fmt.Errorf("metrics type is not found: %s", metricsName).Error())
-			http.Error(w, "metrics type is not found", http.StatusNotImplemented)
+			l.Error(fmt.Sprintf("Handlers - UpdateSpecificMetrics - Metrics Type: %s", metricsType))
+			http.Error(w, "metrics type not found", http.StatusNotImplemented)
 		}
 
-		w.Header().Set("Content-Type", "text/plain")
-		w.WriteHeader(http.StatusOK)
+		resp, err := json.Marshal(metrics)
+		if err != nil {
+			l.Error(err.Error())
+			errorHandler(w, err)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(resp)
 	}
 }
 
@@ -124,25 +148,31 @@ func getSomeMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterface) htt
 	return func(w http.ResponseWriter, r *http.Request) {
 		var metrics entity.Metrics
 		if err := json.NewDecoder(r.Body).Decode(&metrics); err != nil {
-			http.Error(w, "error with decoding metrics", http.StatusBadRequest)
+			http.Error(w, "error decoding metrics during get", http.StatusBadRequest)
 			return
 		}
 
-		value, err := tool.GetMetrics(metrics)
+		value, err := tool.GetMetrics(r.Context(), metrics)
 		if err != nil {
-			l.Error(fmt.Errorf("error with getting metrics: %w", err).Error())
+			l.Error(err.Error())
 			errorHandler(w, err)
 			return
 		}
 
 		resp, err := json.Marshal(value)
 		if err != nil {
-			l.Error(fmt.Errorf("error with marshalling response: %w", err).Error())
+			l.Error(err.Error())
 			errorHandler(w, err)
 			return
 		}
 
+		fmt.Printf(`getSomeMetrics:
+			original struct: %+v
+			json: %s
+		`, value, string(resp))
+
 		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
 		w.Write(resp)
 	}
 }
@@ -157,20 +187,37 @@ func getSpecificMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterface)
 			MType: metricsType,
 		}
 
-		res, err := tool.GetMetrics(metrics)
+		res, err := tool.GetMetrics(r.Context(), metrics)
 		if err != nil {
-			l.Error(fmt.Errorf("metrics is not found: %w", err).Error())
-			http.Error(w, "metrics is not found", http.StatusNotFound)
+			l.Error(err.Error())
+			errorHandler(w, err)
 			return
 		}
 
+		var resp []byte
+
 		switch metricsType {
 		case Gauge:
-			w.Write([]byte(fmt.Sprintf("%g", *res.Value)))
+			resp = []byte(fmt.Sprintf("%g", *res.Value))
 		case Counter:
-			w.Write([]byte(fmt.Sprintf("%d", *res.Delta)))
+			resp = []byte(fmt.Sprintf("%d", *res.Delta))
 		default:
 			http.Error(w, "metrics type is not found", http.StatusNotImplemented)
+			return
 		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(resp)
+	}
+}
+
+func pingHandler(tool *usecase.ToolUseCase, l logger.LogInterface) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if err := tool.PingRepo(r.Context()); err != nil {
+			l.Error(fmt.Sprintf("Handlers - PignHandlers - DB Connection Error: %s", err.Error()))
+			http.Error(w, "error db connection", http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
 	}
 }

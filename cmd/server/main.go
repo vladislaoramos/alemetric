@@ -1,24 +1,25 @@
 package main
 
 import (
-	"flag"
+	"fmt"
+	"log"
+	"os"
+
 	"github.com/vladislaoramos/alemetric/configs"
 	"github.com/vladislaoramos/alemetric/internal/app/server"
-	"log"
+	logger "github.com/vladislaoramos/alemetric/pkg/log"
 )
 
 func main() {
-	cfg := new(configs.Config)
+	serverCfg := configs.NewConfig(configs.ServerConfig)
 
-	flag.StringVar(&cfg.Server.Address, "a", cfg.Server.Address, "server address")
-	flag.BoolVar(&cfg.Server.Restore, "r", cfg.Server.Restore, "restore data from file")
-	flag.DurationVar(&cfg.Server.StoreInterval, "i", cfg.Server.StoreInterval, "store interval")
-	flag.StringVar(&cfg.Server.StoreFile, "f", cfg.Server.StoreFile, "store file")
-
-	err := configs.Init(cfg)
+	f, err := os.OpenFile("/tmp/log_server", os.O_CREATE|os.O_APPEND|os.O_RDWR, 0777)
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Fatal("unable to open file for log")
 	}
 
-	server.Run(cfg)
+	lgr := logger.New(serverCfg.Logger.Level, f)
+	lgr.Info(fmt.Sprintf("%+v", serverCfg))
+
+	server.Run(serverCfg, lgr)
 }

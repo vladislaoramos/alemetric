@@ -2,11 +2,15 @@ package repo
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"github.com/vladislaoramos/alemetric/internal/entity"
+	"io"
 	"os"
 	"sync"
+
+	"github.com/vladislaoramos/alemetric/internal/entity"
 )
 
 type MetricsRepo struct {
@@ -16,7 +20,7 @@ type MetricsRepo struct {
 	Restore       bool
 }
 
-func NewMetricsRepo(options ...OptionFunc) *MetricsRepo {
+func NewMetricsRepo(options ...OptionFunc) (*MetricsRepo, error) {
 	metricsRepo := &MetricsRepo{
 		Mu:      &sync.Mutex{},
 		storage: make(map[string]entity.Metrics),
@@ -27,28 +31,35 @@ func NewMetricsRepo(options ...OptionFunc) *MetricsRepo {
 	}
 
 	if metricsRepo.Restore {
-		metricsRepo.UploadFromFile()
+		err := metricsRepo.Upload(context.TODO())
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	return metricsRepo
+	return metricsRepo, nil
 }
 
-func (r *MetricsRepo) GetMetricsNames() []string {
+func (r *MetricsRepo) GetMetricsNames(_ context.Context) []string {
 	var list []string
+	r.Mu.Lock()
+	defer r.Mu.Unlock()
 	for name := range r.storage {
 		list = append(list, name)
 	}
 	return list
 }
 
-func (r *MetricsRepo) StoreMetrics(metrics entity.Metrics) error {
+func (r *MetricsRepo) StoreMetrics(_ context.Context, metrics entity.Metrics) error {
 	r.Mu.Lock()
 	r.storage[metrics.ID] = metrics
 	r.Mu.Unlock()
 	return nil
 }
 
-func (r *MetricsRepo) GetMetrics(name string) (entity.Metrics, error) {
+func (r *MetricsRepo) GetMetrics(_ context.Context, name string) (entity.Metrics, error) {
+	r.Mu.Lock()
+	defer r.Mu.Unlock()
 	value, ok := r.storage[name]
 	if !ok {
 		return entity.Metrics{}, ErrNotFound
@@ -56,7 +67,7 @@ func (r *MetricsRepo) GetMetrics(name string) (entity.Metrics, error) {
 	return value, nil
 }
 
-func (r *MetricsRepo) StoreToFile() error {
+func (r *MetricsRepo) StoreAll() error {
 	file, err := os.OpenFile(r.StoreFilePath, os.O_WRONLY|os.O_CREATE, 0777)
 	if err != nil {
 		return fmt.Errorf("error opening file with metrics: %w", err)
@@ -86,8 +97,10 @@ func (r *MetricsRepo) StoreToFile() error {
 	return nil
 }
 
-func (r *MetricsRepo) UploadFromFile() error {
-	file, err := os.OpenFile(r.StoreFilePath, os.O_RDONLY, 0777)
+func (r *MetricsRepo) Upload(_ context.Context) error {
+	r.Mu.Lock()
+	defer r.Mu.Unlock()
+	file, err := os.OpenFile(r.StoreFilePath, os.O_RDONLY|os.O_CREATE, 0777)
 	if err != nil {
 		return fmt.Errorf("error opening file with metrics: %w", err)
 	}
@@ -95,8 +108,11 @@ func (r *MetricsRepo) UploadFromFile() error {
 
 	reader := bufio.NewReader(file)
 	data, err := reader.ReadBytes('\n')
-	if err != nil {
+	if err != nil && !errors.Is(err, io.EOF) {
 		return fmt.Errorf("error reading from file with metrics: %w", err)
+	}
+	if errors.Is(err, io.EOF) {
+		return nil
 	}
 
 	err = json.Unmarshal(data, &r.storage)
@@ -104,5 +120,9 @@ func (r *MetricsRepo) UploadFromFile() error {
 		return fmt.Errorf("error unmarshalling file with metrics: %w", err)
 	}
 
+	return nil
+}
+
+func (r *MetricsRepo) Ping(_ context.Context) error {
 	return nil
 }

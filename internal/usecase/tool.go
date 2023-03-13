@@ -1,12 +1,14 @@
 package usecase
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/vladislaoramos/alemetric/internal/entity"
 	"github.com/vladislaoramos/alemetric/internal/repo"
-	"github.com/vladislaoramos/alemetric/pkg/log"
-	"time"
+	logger "github.com/vladislaoramos/alemetric/pkg/log"
 )
 
 const (
@@ -21,7 +23,11 @@ type ToolUseCase struct {
 	writeFileDuration       time.Duration
 	writeToFileWithDuration bool
 	syncWriteFile           bool
+	asyncWriteFile          bool
 	C                       chan struct{}
+
+	checkDataSign bool
+	encryptionKey string
 }
 
 func NewMetricsTool(repo MetricsRepo, l logger.LogInterface, options ...OptionFunc) *ToolUseCase {
@@ -41,7 +47,7 @@ func NewMetricsTool(repo MetricsRepo, l logger.LogInterface, options ...OptionFu
 		}()
 	}
 
-	if useCase.writeToFileWithDuration || useCase.syncWriteFile {
+	if useCase.writeToFileWithDuration || useCase.asyncWriteFile {
 		useCase.C = make(chan struct{}, 1)
 		go useCase.saveStorage()
 	}
@@ -52,58 +58,82 @@ func NewMetricsTool(repo MetricsRepo, l logger.LogInterface, options ...OptionFu
 func (mt *ToolUseCase) saveStorage() {
 	for {
 		<-mt.C
-		err := mt.repo.StoreToFile()
+		err := mt.repo.StoreAll()
 		if err != nil {
-			mt.logger.Error(fmt.Sprintf("error while writing to file: %s", err))
+			mt.logger.Error(fmt.Sprintf("error while writing to storage: %s", err))
 		} else {
-			mt.logger.Info("store metric success")
+			mt.logger.Info("successful saving of metrics")
 		}
 	}
 }
 
-func (mt *ToolUseCase) GetMetricsNames() ([]string, error) {
-	names := mt.repo.GetMetricsNames()
+func (mt *ToolUseCase) GetMetricsNames(ctx context.Context) ([]string, error) {
+	names := mt.repo.GetMetricsNames(ctx)
 	return names, nil
 }
 
-func (mt *ToolUseCase) StoreMetrics(metrics entity.Metrics) error {
+func (mt *ToolUseCase) StoreMetrics(ctx context.Context, metrics entity.Metrics) error {
+	if mt.checkDataSign && !metrics.CheckDataSign(mt.encryptionKey) {
+		return ErrDataSignNotEqual
+	}
+
 	switch metrics.MType {
 	case Gauge:
-		if err := mt.repo.StoreMetrics(metrics); err != nil {
+		if err := mt.repo.StoreMetrics(ctx, metrics); err != nil {
 			if errors.Is(err, repo.ErrNotFound) {
-				return ErrNotFound
+				return fmt.Errorf("store metrics: %w", ErrNotFound)
 			}
-			return fmt.Errorf("MetricsTool - StoreMetric: %w", err)
+			return fmt.Errorf("error store metrics: %w", err)
 		}
 	case Counter:
-		oldMetric, err := mt.repo.GetMetrics(metrics.ID)
-		if err != nil {
-			if !errors.Is(err, repo.ErrNotFound) {
-				return fmt.Errorf("MetricsTool - GetMetric: %w", err)
-			}
+		oldMetric, err := mt.repo.GetMetrics(ctx, metrics.ID)
+		if err != nil && !errors.Is(err, repo.ErrNotFound) {
+			return fmt.Errorf("error getting metrics: %w", err)
+		} else if errors.Is(err, repo.ErrNotFound) {
+			var oldDelta entity.Counter
+			newDelta := oldDelta + *metrics.Delta
+			metrics.Delta = &newDelta
 		} else {
-			delta := *metrics.Delta + *oldMetric.Delta
+			delta := *oldMetric.Delta + *metrics.Delta
 			metrics.Delta = &delta
 		}
-		if err := mt.repo.StoreMetrics(metrics); err != nil {
-			return fmt.Errorf("MetricsTool - StoreMetric: %w", err)
+
+		metrics.SignData("server", mt.encryptionKey)
+
+		if err := mt.repo.StoreMetrics(ctx, metrics); err != nil {
+			return fmt.Errorf("error storing metrics: %w", err)
 		}
+
 	default:
 		return ErrNotImplemented
 	}
-	if mt.syncWriteFile {
+	if mt.asyncWriteFile {
 		mt.C <- struct{}{}
+	}
+	if mt.syncWriteFile {
+		err := mt.repo.StoreAll()
+		if err != nil {
+			return fmt.Errorf("error storing all metrics: %w", err)
+		}
 	}
 	return nil
 }
 
-func (mt *ToolUseCase) GetMetrics(metrics entity.Metrics) (entity.Metrics, error) {
-	metric, err := mt.repo.GetMetrics(metrics.ID)
+func (mt *ToolUseCase) GetMetrics(ctx context.Context, metrics entity.Metrics) (entity.Metrics, error) {
+	res, err := mt.repo.GetMetrics(ctx, metrics.ID)
 	if err != nil {
 		if errors.Is(err, repo.ErrNotFound) {
-			return metric, ErrNotFound
+			return res, ErrNotFound
 		}
-		return metric, fmt.Errorf("MetricsTool - Metric: %w", err)
+		return res, fmt.Errorf("error getting metrics: %w", err)
 	}
-	return metric, nil
+
+	if mt.encryptionKey != "" && res.Hash == "" {
+		res.SignData("server", mt.encryptionKey)
+	}
+	return res, nil
+}
+
+func (mt *ToolUseCase) PingRepo(ctx context.Context) error {
+	return mt.repo.Ping(ctx)
 }

@@ -1,25 +1,24 @@
 package agent
 
 import (
-	"github.com/go-resty/resty/v2"
-	"github.com/vladislaoramos/alemetric/configs"
-	logger "github.com/vladislaoramos/alemetric/pkg/log"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/go-resty/resty/v2"
+	"github.com/vladislaoramos/alemetric/configs"
+	logger "github.com/vladislaoramos/alemetric/pkg/log"
 )
 
 const urlProtocol = "http://"
 
-func Run(cfg *configs.Config) {
-	lgr := logger.New(cfg.Logger.Level)
-
+func Run(cfg *configs.Config, lgr *logger.Logger) {
 	metrics := NewMetrics()
 
 	client := resty.New().SetBaseURL(urlProtocol + cfg.Agent.ServerURL)
 
-	webAPI := NewWebAPI(client)
+	webAPI := NewWebAPI(client, cfg.Agent.Key)
 
 	worker := NewWorker(lgr, metrics, cfg.Agent.MetricsNames, webAPI)
 
@@ -33,5 +32,5 @@ func Run(cfg *configs.Config) {
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	stop := <-sigs
 
-	lgr.Info("agent got stop signal: " + stop.String())
+	lgr.Info("Agent got stop signal: " + stop.String())
 }
