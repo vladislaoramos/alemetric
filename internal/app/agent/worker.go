@@ -44,20 +44,20 @@ func (w *Worker) UpdateMetrics(ticker *time.Ticker) {
 }
 
 func (w *Worker) SendMetrics(ticker *time.Ticker) {
+	// start := time.Now()
 	for {
 		<-ticker.C
 
-		jobCh := make(chan entity.Metrics, 1)
+		jobCh := make(chan entity.Metrics)
 		for i := 0; i < w.rateLimit; i++ {
 			go func() {
 				for job := range jobCh {
 					w.l.Info(fmt.Sprintf("Job with metrics %s is extracting from job channel", job.ID))
-					go w.sendMetrics(job.ID, job.MType, job.Delta, job.Value)
+					// w.l.Info(fmt.Sprintf("Time after start: %v", time.Now().Sub(start)))
+					w.sendMetrics(job.ID, job.MType, job.Delta, job.Value)
 				}
 			}()
 		}
-
-		//var jobs []entity.Metrics
 
 		for _, name := range w.metricsNames {
 			field := reflect.Indirect(reflect.ValueOf(w.metrics)).FieldByName(name)
@@ -85,45 +85,26 @@ func (w *Worker) SendMetrics(ticker *time.Ticker) {
 				continue
 			}
 
-			time.Sleep(time.Second)
-			//go func(metricsName, metricsType string, delta *entity.Counter, value *entity.Gauge) {
-			//	err := w.webAPI.SendMetrics(metricsName, metricsType, delta, value)
-			//	if err != nil {
-			//		w.l.Error(fmt.Sprintf("error sending metrics conflict: %v; metricName: %s metricType: %s delta: %v value: %v", err,
-			//			metricsName, metricsType, delta, value))
-			//	}
-			//}(name, fieldType, valCounter, valGauge)
-
-			//jobs = append(jobs, entity.Metrics{
-			//	ID:    name,
-			//	MType: fieldType,
-			//	Delta: valCounter,
-			//	Value: valGauge,
-			//})
 			job := entity.Metrics{
 				ID:    name,
 				MType: fieldType,
 				Delta: valCounter,
 				Value: valGauge,
 			}
+
 			jobCh <- job
 			w.l.Info(fmt.Sprintf("Metrics %s added to jobs list", name))
 		}
-
-		//for _, j := range jobs {
-		//	w.l.Info(fmt.Sprintf("Job with metrics %s is adding to job channel", j.ID))
-		//	jobCh <- j
-		//}
 	}
 }
 
 func (w *Worker) sendMetrics(name, mType string, counter *entity.Counter, gauge *entity.Gauge) {
-	go func(metricsName, metricsType string, delta *entity.Counter, value *entity.Gauge) {
-		w.l.Info(fmt.Sprintf("Metrics %s is sending", name))
-		err := w.webAPI.SendMetrics(metricsName, metricsType, delta, value)
-		if err != nil {
-			w.l.Error(fmt.Sprintf("error sending metrics conflict: %v; metricName: %s metricType: %s delta: %v value: %v", err,
-				metricsName, metricsType, delta, value))
-		}
-	}(name, mType, counter, gauge)
+	w.l.Info(fmt.Sprintf("Metrics %s is sending", name))
+	err := w.webAPI.SendMetrics(name, mType, counter, gauge)
+	if err != nil {
+		w.l.Error(
+			fmt.Sprintf(
+				"error sending metrics conflict: %v; metricName: %s metricType: %s delta: %v value: %v",
+				err, name, mType, counter, gauge))
+	}
 }
