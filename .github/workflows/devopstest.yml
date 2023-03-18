@@ -101,7 +101,7 @@ jobs:
 
       - name: "Code increment #1"
         if: |
-          github.head_ref == 'iter1' ||
+          github.head_ref == 'iter1'
         run: |
           devopstest -test.v -test.run=^TestIteration1$ \
             -agent-binary-path=cmd/agent/agent
@@ -126,8 +126,8 @@ jobs:
 # Покройте код агента и сервера юнит тестами
 
       - name: "Code increment #2"
-        if: |
-          github.head_ref == 'iter2' ||
+        if:
+          github.head_ref == 'iter2'
         run: |
           devopstest -test.v -test.run=^TestIteration2[b]*$ \
             -source-path=. \
@@ -140,8 +140,8 @@ jobs:
 # По запросу GET http://<АДРЕС_СЕРВЕРА>/ сервер должен отдавать html-страничку, со списком имен и значений всех известных ему на текущий момент метрик.
 
       - name: "Code increment #3"
-        if: |
-          github.head_ref == 'iter3' ||
+        if:
+          github.head_ref == 'iter3'
         run: |
           devopstest -test.v -test.run=^TestIteration3[b]*$ \
             -source-path=. \
@@ -167,7 +167,7 @@ jobs:
 
       - name: "Code increment #4"
         if: |
-          github.head_ref == 'iter4' ||
+          github.head_ref == 'iter4'
         run: |
           devopstest -test.v -test.run=^TestIteration4$ \
             -source-path=. \
@@ -185,7 +185,7 @@ jobs:
 
       - name: "Code increment #5"
         if: |
-          github.head_ref == 'iter5' ||
+          github.head_ref == 'iter5'
         run: |
           SERVER_PORT=$(random unused-port)
           ADDRESS="localhost:${SERVER_PORT}"
@@ -206,7 +206,7 @@ jobs:
 
       - name: "Code increment #6"
         if: |
-          github.head_ref == 'iter6' ||
+          github.head_ref == 'iter6'
         run: |
           SERVER_PORT=$(random unused-port)
           ADDRESS="localhost:${SERVER_PORT}"
@@ -234,7 +234,7 @@ jobs:
 
       - name: "Code increment #7"
         if: |
-          github.head_ref == 'iter7' ||
+          github.head_ref == 'iter7'
         run: |
           SERVER_PORT=$(random unused-port)
           ADDRESS="localhost:${SERVER_PORT}"
@@ -253,7 +253,7 @@ jobs:
 
       - name: "Code increment #8"
         if: |
-          github.head_ref == 'iter8' ||
+          github.head_ref == 'iter8'
         run: |
           SERVER_PORT=$(random unused-port)
           ADDRESS="localhost:${SERVER_PORT}"
@@ -300,7 +300,7 @@ jobs:
 
       - name: "Code increment #9"
         if: |
-          github.head_ref == 'iter9' ||
+          github.head_ref == 'iter9'
         run: |
           SERVER_PORT=$(random unused-port)
           ADDRESS="localhost:${SERVER_PORT}"
@@ -324,7 +324,7 @@ jobs:
 # NOTE: Для хранения значений gauge рекомендуется использовать тип: double precision
       - name: "Code increment #10"
         if: |
-          github.head_ref == 'iter10' ||
+          github.head_ref == 'iter10'
         run: |
           SERVER_PORT=$(random unused-port)
           ADDRESS="localhost:${SERVER_PORT}"
@@ -345,7 +345,7 @@ jobs:
 
       - name: "Code increment #11"
         if: |
-          github.head_ref == 'iter11' ||
+          github.head_ref == 'iter11'
         run: |
           SERVER_PORT=$(random unused-port)
           ADDRESS="localhost:${SERVER_PORT}"
@@ -371,7 +371,7 @@ jobs:
 
       - name: "Code increment #12"
         if: |
-          github.head_ref == 'iter12' ||
+          github.head_ref == 'iter12'
         run: |
           SERVER_PORT=$(random unused-port)
           ADDRESS="localhost:${SERVER_PORT}"
@@ -393,7 +393,7 @@ jobs:
 
       - name: "Code increment #13"
         if: |
-          github.head_ref == 'iter13' ||
+          github.head_ref == 'iter13'
         run: |
           devopstest -test.v -test.run=^TestIteration13$ \
             -source-path=.
