@@ -11,12 +11,14 @@ import (
 type WebAPIClient struct {
 	client *resty.Client
 	Key    string
+	// RateLimit int
 }
 
 func NewWebAPI(client *resty.Client, key string) *WebAPIClient {
 	return &WebAPIClient{
 		client: client,
 		Key:    key,
+		// RateLimit: limit,
 	}
 }
 

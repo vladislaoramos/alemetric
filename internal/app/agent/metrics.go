@@ -1,10 +1,13 @@
 package agent
 
 import (
+	"github.com/shirou/gopsutil/v3/cpu"
+	"github.com/shirou/gopsutil/v3/mem"
 	"github.com/vladislaoramos/alemetric/internal/entity"
 	"math/rand"
 	"runtime"
 	"sync"
+	"time"
 )
 
 type Metrics struct {
@@ -15,33 +18,36 @@ type Metrics struct {
 }
 
 type storage struct {
-	Alloc         entity.Gauge
-	BuckHashSys   entity.Gauge
-	Frees         entity.Gauge
-	GCCPUFraction entity.Gauge
-	GCSys         entity.Gauge
-	HeapAlloc     entity.Gauge
-	HeapIdle      entity.Gauge
-	HeapInuse     entity.Gauge
-	HeapObjects   entity.Gauge
-	HeapReleased  entity.Gauge
-	HeapSys       entity.Gauge
-	LastGC        entity.Gauge
-	Lookups       entity.Gauge
-	MCacheInuse   entity.Gauge
-	MCacheSys     entity.Gauge
-	MSpanInuse    entity.Gauge
-	MSpanSys      entity.Gauge
-	Mallocs       entity.Gauge
-	NextGC        entity.Gauge
-	NumForcedGC   entity.Gauge
-	NumGC         entity.Gauge
-	OtherSys      entity.Gauge
-	PauseTotalNs  entity.Gauge
-	StackInuse    entity.Gauge
-	StackSys      entity.Gauge
-	Sys           entity.Gauge
-	TotalAlloc    entity.Gauge
+	Alloc           entity.Gauge
+	BuckHashSys     entity.Gauge
+	Frees           entity.Gauge
+	GCCPUFraction   entity.Gauge
+	GCSys           entity.Gauge
+	HeapAlloc       entity.Gauge
+	HeapIdle        entity.Gauge
+	HeapInuse       entity.Gauge
+	HeapObjects     entity.Gauge
+	HeapReleased    entity.Gauge
+	HeapSys         entity.Gauge
+	LastGC          entity.Gauge
+	Lookups         entity.Gauge
+	MCacheInuse     entity.Gauge
+	MCacheSys       entity.Gauge
+	MSpanInuse      entity.Gauge
+	MSpanSys        entity.Gauge
+	Mallocs         entity.Gauge
+	NextGC          entity.Gauge
+	NumForcedGC     entity.Gauge
+	NumGC           entity.Gauge
+	OtherSys        entity.Gauge
+	PauseTotalNs    entity.Gauge
+	StackInuse      entity.Gauge
+	StackSys        entity.Gauge
+	Sys             entity.Gauge
+	TotalAlloc      entity.Gauge
+	TotalMemory     entity.Gauge
+	FreeMemory      entity.Gauge
+	CPUutilization1 entity.Gauge
 }
 
 func NewMetrics() *Metrics {
@@ -61,6 +67,16 @@ func (m *Metrics) CollectMetrics() {
 	m.updateMetrics(memStats)
 	m.PollCount += 1
 	m.RandomValue = entity.Gauge(rand.Float64())
+}
+
+func (m *Metrics) CollectAdditionalMetrics() {
+	m.Mu.Lock()
+	defer m.Mu.Unlock()
+	vm, _ := mem.VirtualMemory()
+	cpuUtil, _ := cpu.Percent(time.Second, false)
+	m.TotalMemory = entity.Gauge(vm.Total)
+	m.FreeMemory = entity.Gauge(vm.Free)
+	m.CPUutilization1 = entity.Gauge(len(cpuUtil))
 }
 
 func (m *Metrics) updateMetrics(memStats *runtime.MemStats) {

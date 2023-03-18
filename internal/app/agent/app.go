@@ -20,7 +20,7 @@ func Run(cfg *configs.Config, lgr *logger.Logger) {
 
 	webAPI := NewWebAPI(client, cfg.Agent.Key)
 
-	worker := NewWorker(lgr, metrics, cfg.Agent.MetricsNames, webAPI)
+	worker := NewWorker(lgr, metrics, cfg.Agent.MetricsNames, webAPI, cfg.RateLimit)
 
 	updateTicker := time.NewTicker(cfg.Agent.PollInterval)
 	go worker.UpdateMetrics(updateTicker)
