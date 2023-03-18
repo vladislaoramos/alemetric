@@ -57,7 +57,7 @@ func (w *Worker) SendMetrics(ticker *time.Ticker) {
 			}()
 		}
 
-		var jobs []entity.Metrics
+		//var jobs []entity.Metrics
 
 		for _, name := range w.metricsNames {
 			field := reflect.Indirect(reflect.ValueOf(w.metrics)).FieldByName(name)
@@ -94,19 +94,26 @@ func (w *Worker) SendMetrics(ticker *time.Ticker) {
 			//	}
 			//}(name, fieldType, valCounter, valGauge)
 
-			jobs = append(jobs, entity.Metrics{
+			//jobs = append(jobs, entity.Metrics{
+			//	ID:    name,
+			//	MType: fieldType,
+			//	Delta: valCounter,
+			//	Value: valGauge,
+			//})
+			job := entity.Metrics{
 				ID:    name,
 				MType: fieldType,
 				Delta: valCounter,
 				Value: valGauge,
-			})
+			}
+			jobCh <- job
 			w.l.Info(fmt.Sprintf("Metrics %s added to jobs list", name))
 		}
 
-		for _, j := range jobs {
-			w.l.Info(fmt.Sprintf("Job with metrics %s is adding to job channel", j.ID))
-			jobCh <- j
-		}
+		//for _, j := range jobs {
+		//	w.l.Info(fmt.Sprintf("Job with metrics %s is adding to job channel", j.ID))
+		//	jobCh <- j
+		//}
 	}
 }
 
