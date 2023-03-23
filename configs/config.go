@@ -29,7 +29,7 @@ type Agent struct {
 	ServerURL      string        `yaml:"serverURL" env:"ADDRESS"`
 	MetricsNames   []string      `yaml:"metricsNames"`
 	Key            string        `env:"KEY"`
-	RateLimit      int           `env:"RATE_LIMIT"`
+	RateLimit      int           `env:"RATE_LIMIT" env-default:"1"`
 }
 
 type Server struct {
