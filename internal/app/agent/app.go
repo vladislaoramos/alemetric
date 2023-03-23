@@ -24,6 +24,7 @@ func Run(cfg *configs.Config, lgr *logger.Logger) {
 
 	updateTicker := time.NewTicker(cfg.Agent.PollInterval)
 	go worker.UpdateMetrics(updateTicker)
+	go worker.UpdateAdditionalMetrics(updateTicker)
 
 	sendTicker := time.NewTicker(cfg.Agent.ReportInterval)
 	go worker.SendMetrics(sendTicker)

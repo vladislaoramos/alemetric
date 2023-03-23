@@ -62,14 +62,14 @@ func updateMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterface) http
 
 		value, err := tool.GetMetrics(r.Context(), metrics)
 		if err != nil {
-			l.Error(err.Error())
+			l.Error(fmt.Errorf("error with getting updated metrics: %w", err).Error())
 			errorHandler(w, err)
 			return
 		}
 
 		resp, err := json.Marshal(value)
 		if err != nil {
-			l.Error(err.Error())
+			l.Error(fmt.Errorf("error with marshalling metrics before sending the response: %w", err).Error())
 			errorHandler(w, err)
 			return
 		}

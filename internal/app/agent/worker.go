@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"sync"
 	"time"
 
 	logger "github.com/vladislaoramos/alemetric/pkg/log"
@@ -38,8 +39,15 @@ func (w *Worker) UpdateMetrics(ticker *time.Ticker) {
 	for {
 		<-ticker.C
 		w.metrics.CollectMetrics()
-		w.metrics.CollectAdditionalMetrics()
 		w.l.Info("Metrics updated")
+	}
+}
+
+func (w *Worker) UpdateAdditionalMetrics(ticker *time.Ticker) {
+	for {
+		<-ticker.C
+		w.metrics.CollectAdditionalMetrics()
+		w.l.Info("Additional metrics updated")
 	}
 }
 
@@ -48,13 +56,17 @@ func (w *Worker) SendMetrics(ticker *time.Ticker) {
 	for {
 		<-ticker.C
 
+		wg := sync.WaitGroup{}
 		jobCh := make(chan entity.Metrics)
+
 		for i := 0; i < w.rateLimit; i++ {
 			go func() {
 				for job := range jobCh {
 					w.l.Info(fmt.Sprintf("Job with metrics %s is extracting from job channel", job.ID))
 					// w.l.Info(fmt.Sprintf("Time after start: %v", time.Now().Sub(start)))
+					//wg.Done()
 					w.sendMetrics(job.ID, job.MType, job.Delta, job.Value)
+					wg.Done()
 				}
 			}()
 		}
@@ -92,9 +104,12 @@ func (w *Worker) SendMetrics(ticker *time.Ticker) {
 				Value: valGauge,
 			}
 
+			//wg.Add(1)
 			jobCh <- job
+			wg.Add(1)
 			w.l.Info(fmt.Sprintf("Metrics %s added to jobs list", name))
 		}
+		wg.Wait()
 	}
 }
 
