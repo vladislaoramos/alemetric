@@ -52,22 +52,17 @@ func (w *Worker) UpdateAdditionalMetrics(ticker *time.Ticker) {
 }
 
 func (w *Worker) SendMetrics(ticker *time.Ticker) {
-	// start := time.Now()
 	for {
 		<-ticker.C
 
-		wg := sync.WaitGroup{}
-		jobCh := make(chan entity.Metrics)
+		var wg sync.WaitGroup
+		tasks := make(chan entity.Metrics)
 
 		for i := 0; i < w.rateLimit; i++ {
+			wg.Add(1)
 			go func() {
-				for job := range jobCh {
-					w.l.Info(fmt.Sprintf("Job with metrics %s is extracting from job channel", job.ID))
-					// w.l.Info(fmt.Sprintf("Time after start: %v", time.Now().Sub(start)))
-					//wg.Done()
-					w.sendMetrics(job.ID, job.MType, job.Delta, job.Value)
-					wg.Done()
-				}
+				defer wg.Done()
+				w.worker(tasks)
 			}()
 		}
 
@@ -97,18 +92,20 @@ func (w *Worker) SendMetrics(ticker *time.Ticker) {
 				continue
 			}
 
-			job := entity.Metrics{
+			task := entity.Metrics{
 				ID:    name,
 				MType: fieldType,
 				Delta: valCounter,
 				Value: valGauge,
 			}
 
-			//wg.Add(1)
-			jobCh <- job
-			wg.Add(1)
+			time.Sleep(time.Millisecond * 500)
+
+			tasks <- task
 			w.l.Info(fmt.Sprintf("Metrics %s added to jobs list", name))
 		}
+
+		close(tasks)
 		wg.Wait()
 	}
 }
@@ -121,5 +118,11 @@ func (w *Worker) sendMetrics(name, mType string, counter *entity.Counter, gauge 
 			fmt.Sprintf(
 				"error sending metrics conflict: %v; metricName: %s metricType: %s delta: %v value: %v",
 				err, name, mType, counter, gauge))
+	}
+}
+
+func (w *Worker) worker(tasks chan entity.Metrics) {
+	for task := range tasks {
+		w.sendMetrics(task.ID, task.MType, task.Delta, task.Value)
 	}
 }
