@@ -7,7 +7,6 @@ import (
 	"math/rand"
 	"runtime"
 	"sync"
-	"time"
 )
 
 type Metrics struct {
@@ -73,10 +72,10 @@ func (m *Metrics) CollectAdditionalMetrics() {
 	m.Mu.Lock()
 	defer m.Mu.Unlock()
 	vm, _ := mem.VirtualMemory()
-	cpuUtil, _ := cpu.Percent(time.Second, false)
+	cpuUtil, _ := cpu.Percent(0, false)
 	m.TotalMemory = entity.Gauge(vm.Total)
 	m.FreeMemory = entity.Gauge(vm.Free)
-	m.CPUutilization1 = entity.Gauge(len(cpuUtil))
+	m.CPUutilization1 = entity.Gauge(cpuUtil[0])
 }
 
 func (m *Metrics) updateMetrics(memStats *runtime.MemStats) {
