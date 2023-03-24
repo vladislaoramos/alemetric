@@ -112,12 +112,24 @@ func (w *Worker) SendMetrics(ticker *time.Ticker) {
 
 func (w *Worker) sendMetrics(name, mType string, counter *entity.Counter, gauge *entity.Gauge) {
 	w.l.Info(fmt.Sprintf("Metrics %s is sending", name))
+
+	var c entity.Counter
+	if counter != nil {
+		c = *counter
+	}
+
+	var g entity.Gauge
+	if gauge != nil {
+		g = *gauge
+	}
+
 	err := w.webAPI.SendMetrics(name, mType, counter, gauge)
 	if err != nil {
 		w.l.Error(
 			fmt.Sprintf(
-				"error sending metrics conflict: %v; metricName: %s metricType: %s delta: %v value: %v",
-				err, name, mType, counter, gauge))
+				"error sending metrics conflict: %v; metricName: %s metricType: %s delta: %d value: %v",
+				err, name, mType, c, g))
+		//w.l.Fatal("oops")
 	}
 }
 
