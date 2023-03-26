@@ -29,7 +29,7 @@ type Agent struct {
 	ServerURL      string        `yaml:"serverURL" env:"ADDRESS"`
 	MetricsNames   []string      `yaml:"metricsNames"`
 	Key            string        `env:"KEY"`
-	RateLimit      int           `env:"RATE_LIMIT" env-default:"1"`
+	RateLimit      uint          `env:"RATE_LIMIT" env-default:"1"`
 }
 
 type Server struct {
@@ -195,7 +195,7 @@ func (c *Config) parseFlags(app string) {
 		flag.DurationVar(&c.Agent.ReportInterval, "r", reportInterval, "report interval")
 		flag.DurationVar(&c.Agent.PollInterval, "p", pollInterval, "poll interval")
 		flag.StringVar(&c.Agent.Key, "k", "", "encryption key")
-		flag.IntVar(&c.RateLimit, "l", rateLimit, "rate limit")
+		flag.UintVar(&c.RateLimit, "l", rateLimit, "rate limit")
 	case ServerConfig:
 		flag.StringVar(&c.Server.Address, "a", "", "server address")
 		flag.BoolVar(&c.Server.Restore, "r", true, "restore data from file")

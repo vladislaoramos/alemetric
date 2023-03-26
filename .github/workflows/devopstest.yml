@@ -300,7 +300,8 @@ jobs:
 
       - name: "Code increment #9"
         if: |
-          github.head_ref == 'iter9'
+          github.head_ref == 'iter9' ||
+          github.head_ref == 'iter14'
         run: |
           SERVER_PORT=$(random unused-port)
           ADDRESS="localhost:${SERVER_PORT}"

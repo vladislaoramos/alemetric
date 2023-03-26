@@ -2,6 +2,7 @@ package agent
 
 import (
 	"fmt"
+	"github.com/vladislaoramos/alemetric/internal/usecase"
 	"reflect"
 	"strings"
 	"sync"
@@ -13,11 +14,11 @@ import (
 )
 
 type Worker struct {
-	webAPI       WebAPIAgent
-	metrics      *Metrics
-	metricsNames []string
-	l            logger.LogInterface
-	rateLimit    int
+	webAPI           WebAPIAgent
+	metrics          *Metrics
+	metricsNames     []string
+	l                logger.LogInterface
+	rateLimitCounter uint
 }
 
 func NewWorker(
@@ -25,13 +26,13 @@ func NewWorker(
 	metrics *Metrics,
 	metricsNames []string,
 	webAPI WebAPIAgent,
-	limit int) *Worker {
+	limit uint) *Worker {
 	return &Worker{
-		l:            l,
-		metrics:      metrics,
-		metricsNames: metricsNames,
-		webAPI:       webAPI,
-		rateLimit:    limit,
+		l:                l,
+		metrics:          metrics,
+		metricsNames:     metricsNames,
+		webAPI:           webAPI,
+		rateLimitCounter: limit,
 	}
 }
 
@@ -58,7 +59,17 @@ func (w *Worker) SendMetrics(ticker *time.Ticker) {
 		var wg sync.WaitGroup
 		tasks := make(chan entity.Metrics)
 
-		for i := 0; i < w.rateLimit; i++ {
+		var workersNum int
+		if w.rateLimitCounter > 0 {
+			workersNum = int(w.rateLimitCounter)
+		} else {
+			w.l.Fatal(
+				fmt.Sprintf(
+					"The current number of workers is %d. It must be positive and greater than 0",
+					w.rateLimitCounter))
+		}
+
+		for i := 0; i < workersNum; i++ {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
@@ -81,10 +92,10 @@ func (w *Worker) SendMetrics(ticker *time.Ticker) {
 			)
 
 			switch fieldType {
-			case "counter":
+			case usecase.Counter:
 				val := entity.Counter(field.Int())
 				valCounter = &val
-			case "gauge":
+			case usecase.Gauge:
 				val := entity.Gauge(field.Float())
 				valGauge = &val
 			default:
@@ -98,8 +109,6 @@ func (w *Worker) SendMetrics(ticker *time.Ticker) {
 				Delta: valCounter,
 				Value: valGauge,
 			}
-
-			time.Sleep(time.Millisecond * 500)
 
 			tasks <- task
 			w.l.Info(fmt.Sprintf("Metrics %s added to jobs list", name))
@@ -129,7 +138,6 @@ func (w *Worker) sendMetrics(name, mType string, counter *entity.Counter, gauge 
 			fmt.Sprintf(
 				"error sending metrics conflict: %v; metricName: %s metricType: %s delta: %d value: %v",
 				err, name, mType, c, g))
-		//w.l.Fatal("oops")
 	}
 }
 
