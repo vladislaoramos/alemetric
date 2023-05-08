@@ -2,8 +2,10 @@ package agent
 
 import (
 	"fmt"
+	"github.com/vladislaoramos/alemetric/internal/usecase"
 	"reflect"
 	"strings"
+	"sync"
 	"time"
 
 	logger "github.com/vladislaoramos/alemetric/pkg/log"
@@ -12,22 +14,25 @@ import (
 )
 
 type Worker struct {
-	webAPI       WebAPIAgent
-	metrics      *Metrics
-	metricsNames []string
-	l            logger.LogInterface
+	webAPI           WebAPIAgent
+	metrics          *Metrics
+	metricsNames     []string
+	l                logger.LogInterface
+	rateLimitCounter uint
 }
 
 func NewWorker(
 	l logger.LogInterface,
 	metrics *Metrics,
 	metricsNames []string,
-	webAPI WebAPIAgent) *Worker {
+	webAPI WebAPIAgent,
+	limit uint) *Worker {
 	return &Worker{
-		l:            l,
-		metrics:      metrics,
-		metricsNames: metricsNames,
-		webAPI:       webAPI,
+		l:                l,
+		metrics:          metrics,
+		metricsNames:     metricsNames,
+		webAPI:           webAPI,
+		rateLimitCounter: limit,
 	}
 }
 
@@ -39,9 +44,38 @@ func (w *Worker) UpdateMetrics(ticker *time.Ticker) {
 	}
 }
 
+func (w *Worker) UpdateAdditionalMetrics(ticker *time.Ticker) {
+	for {
+		<-ticker.C
+		w.metrics.CollectAdditionalMetrics()
+		w.l.Info("Additional metrics updated")
+	}
+}
+
 func (w *Worker) SendMetrics(ticker *time.Ticker) {
 	for {
 		<-ticker.C
+
+		var wg sync.WaitGroup
+		tasks := make(chan entity.Metrics)
+
+		var workersNum int
+		if w.rateLimitCounter > 0 {
+			workersNum = int(w.rateLimitCounter)
+		} else {
+			w.l.Fatal(
+				fmt.Sprintf(
+					"The current number of workers is %d. It must be positive and greater than 0",
+					w.rateLimitCounter))
+		}
+
+		for i := 0; i < workersNum; i++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				w.worker(tasks)
+			}()
+		}
 
 		for _, name := range w.metricsNames {
 			field := reflect.Indirect(reflect.ValueOf(w.metrics)).FieldByName(name)
@@ -58,10 +92,10 @@ func (w *Worker) SendMetrics(ticker *time.Ticker) {
 			)
 
 			switch fieldType {
-			case "counter":
+			case usecase.Counter:
 				val := entity.Counter(field.Int())
 				valCounter = &val
-			case "gauge":
+			case usecase.Gauge:
 				val := entity.Gauge(field.Float())
 				valGauge = &val
 			default:
@@ -69,14 +103,46 @@ func (w *Worker) SendMetrics(ticker *time.Ticker) {
 				continue
 			}
 
-			time.Sleep(time.Second)
-			go func(metricsName, metricsType string, delta *entity.Counter, value *entity.Gauge) {
-				err := w.webAPI.SendMetrics(metricsName, metricsType, delta, value)
-				if err != nil {
-					w.l.Error(fmt.Sprintf("error sending metrics conflict: %v; metricName: %s metricType: %s delta: %v value: %v", err,
-						metricsName, metricsType, delta, value))
-				}
-			}(name, fieldType, valCounter, valGauge)
+			task := entity.Metrics{
+				ID:    name,
+				MType: fieldType,
+				Delta: valCounter,
+				Value: valGauge,
+			}
+
+			tasks <- task
+			w.l.Info(fmt.Sprintf("Metrics %s added to jobs list", name))
 		}
+
+		close(tasks)
+		wg.Wait()
+	}
+}
+
+func (w *Worker) sendMetrics(name, mType string, counter *entity.Counter, gauge *entity.Gauge) {
+	w.l.Info(fmt.Sprintf("Metrics %s is sending", name))
+
+	var c entity.Counter
+	if counter != nil {
+		c = *counter
+	}
+
+	var g entity.Gauge
+	if gauge != nil {
+		g = *gauge
+	}
+
+	err := w.webAPI.SendMetrics(name, mType, counter, gauge)
+	if err != nil {
+		w.l.Error(
+			fmt.Sprintf(
+				"error sending metrics conflict: %v; metricName: %s metricType: %s delta: %d value: %v",
+				err, name, mType, c, g))
+	}
+}
+
+func (w *Worker) worker(tasks chan entity.Metrics) {
+	for task := range tasks {
+		w.sendMetrics(task.ID, task.MType, task.Delta, task.Value)
 	}
 }

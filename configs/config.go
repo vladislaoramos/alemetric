@@ -29,6 +29,7 @@ type Agent struct {
 	ServerURL      string        `yaml:"serverURL" env:"ADDRESS"`
 	MetricsNames   []string      `yaml:"metricsNames"`
 	Key            string        `env:"KEY"`
+	RateLimit      uint          `env:"RATE_LIMIT" env-default:"1"`
 }
 
 type Server struct {
@@ -50,6 +51,7 @@ const (
 	storeInterval  = time.Second * 300
 	storeFile      = "/tmp/devops-metrics-db.json"
 	restoreFlag    = true
+	rateLimit      = 1
 
 	agentName  = "alemetric-agent"
 	serverName = "alemetric-server"
@@ -90,6 +92,9 @@ var metricsNames = []string{
 	"TotalAlloc",
 	"RandomValue",
 	"PollCount",
+	"TotalMemory",
+	"FreeMemory",
+	"CPUutilization1",
 }
 
 func defaultServerCfg() *Config {
@@ -113,6 +118,7 @@ func defaultAgentCfg() *Config {
 			ReportInterval: reportInterval,
 			ServerURL:      serverURL,
 			MetricsNames:   metricsNames,
+			RateLimit:      rateLimit,
 		},
 		Logger: Logger{Level: loggerDefaultLevel},
 	}
@@ -141,6 +147,10 @@ func (c *Config) updateAgentConfigs(v *Config) {
 
 	if v.Agent.Key != "" && c.Agent.Key != v.Agent.Key {
 		c.Agent.Key = v.Agent.Key
+	}
+
+	if v.RateLimit != 1 && c.RateLimit != v.RateLimit {
+		c.RateLimit = v.RateLimit
 	}
 }
 
@@ -185,6 +195,7 @@ func (c *Config) parseFlags(app string) {
 		flag.DurationVar(&c.Agent.ReportInterval, "r", reportInterval, "report interval")
 		flag.DurationVar(&c.Agent.PollInterval, "p", pollInterval, "poll interval")
 		flag.StringVar(&c.Agent.Key, "k", "", "encryption key")
+		flag.UintVar(&c.RateLimit, "l", rateLimit, "rate limit")
 	case ServerConfig:
 		flag.StringVar(&c.Server.Address, "a", "", "server address")
 		flag.BoolVar(&c.Server.Restore, "r", true, "restore data from file")
