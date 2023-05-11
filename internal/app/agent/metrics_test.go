@@ -1,6 +1,7 @@
 package agent
 
 import (
+	"github.com/shirou/gopsutil/v3/mem"
 	"github.com/vladislaoramos/alemetric/internal/entity"
 	"runtime"
 	"sync"
@@ -45,7 +46,7 @@ func TestMetrics_UpdateMetrics(t *testing.T) {
 	}
 }
 
-func TestMetrics_collectMetrics(t *testing.T) {
+func TestMetrics_CollectMetrics(t *testing.T) {
 	type fields struct {
 		PollCount entity.Counter
 		Mutex     *sync.Mutex
@@ -80,4 +81,29 @@ func TestMetrics_collectMetrics(t *testing.T) {
 			require.Equal(t, m.Alloc, tt.want)
 		})
 	}
+}
+
+func TestMetrics_CollectAdditionalMetrics(t *testing.T) {
+	m := &Metrics{
+		PollCount: 100,
+		Mu:        &sync.Mutex{},
+		storage:   &storage{},
+	}
+
+	m.CollectAdditionalMetrics()
+	vm, _ := mem.VirtualMemory()
+
+	require.NotNil(t, entity.Gauge(vm.Total), m.TotalMemory)
+	require.NotNil(t, entity.Gauge(vm.Free), m.FreeMemory)
+}
+
+func TestNewMetrics(t *testing.T) {
+	expected := &Metrics{
+		Mu:      &sync.Mutex{},
+		storage: &storage{},
+	}
+
+	actual := NewMetrics()
+
+	require.EqualValues(t, expected, actual)
 }

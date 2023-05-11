@@ -76,3 +76,36 @@ func TestParseCounterMetrics(t *testing.T) {
 		})
 	}
 }
+
+func TestCheckDataSign(t *testing.T) {
+	key := "secretKey"
+	var value Gauge = 1.23
+	metrics := &Metrics{
+		ID:    "metric1",
+		MType: "gauge",
+		Value: &value,
+		Hash:  "",
+	}
+
+	expectedHash := metrics.hash(key)
+	metrics.Hash = expectedHash
+	result := metrics.CheckDataSign(key)
+
+	require.True(t, result)
+}
+
+func TestSignData(t *testing.T) {
+	key := "secretKey"
+	var value Gauge = 1.23
+	metrics := &Metrics{
+		ID:    "metric1",
+		MType: "gauge",
+		Value: &value,
+		Hash:  "",
+	}
+
+	metrics.SignData("TestApp", key)
+	require.NotEqual(t, "", metrics.Hash)
+	metrics.SignData("TestApp", "")
+	require.NotEqual(t, "", metrics.Hash)
+}
