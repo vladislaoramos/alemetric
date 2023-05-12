@@ -1,3 +1,4 @@
+// Package agent contains the implementation of the client application.
 package agent
 
 import (
@@ -13,6 +14,7 @@ import (
 
 const urlProtocol = "http://"
 
+// Run method launches the client application.
 func Run(cfg *configs.Config, lgr *logger.Logger) {
 	metrics := NewMetrics()
 

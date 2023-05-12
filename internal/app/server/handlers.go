@@ -12,6 +12,7 @@ import (
 	logger "github.com/vladislaoramos/alemetric/pkg/log"
 )
 
+// getMetricsHandler handles a request to get all metrics names.
 func getMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterface) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		names, err := tool.GetMetricsNames(r.Context())
@@ -26,6 +27,7 @@ func getMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterface) http.Ha
 	}
 }
 
+// updateSeveralMetricsHandler handles a request to update several metrics at once.
 func updateSeveralMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterface) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var items []entity.Metrics
@@ -46,6 +48,7 @@ func updateSeveralMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterfac
 	}
 }
 
+// updateMetricsHandler handles a request to update one metrics.
 func updateMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterface) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var metrics entity.Metrics
@@ -79,6 +82,7 @@ func updateMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterface) http
 	}
 }
 
+// updateSpecificMetricsHandler handles a request to update one specific metrics.
 func updateSpecificMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterface) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		metricsType := chi.URLParam(r, "metricsType")
@@ -144,6 +148,7 @@ func updateSpecificMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterfa
 	}
 }
 
+// getSomeMetricsHandler handles a request to get one metrics.
 func getSomeMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterface) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var metrics entity.Metrics
@@ -177,6 +182,7 @@ func getSomeMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterface) htt
 	}
 }
 
+// getSpecificMetricsHandler handles a request to get one specific metrics.
 func getSpecificMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterface) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		metricsType := chi.URLParam(r, "metricsType")
@@ -211,6 +217,7 @@ func getSpecificMetricsHandler(tool *usecase.ToolUseCase, l logger.LogInterface)
 	}
 }
 
+// pingHandler handles a request to ping the server.
 func pingHandler(tool *usecase.ToolUseCase, l logger.LogInterface) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := tool.PingRepo(r.Context()); err != nil {

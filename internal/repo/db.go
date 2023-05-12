@@ -1,3 +1,4 @@
+// Package repo provides a mechanism for interaction with Postgres repository.
 package repo
 
 import (
@@ -10,14 +11,17 @@ import (
 	"github.com/vladislaoramos/alemetric/pkg/postgres"
 )
 
+// PostgresRepo stores the database object.
 type PostgresRepo struct {
 	*postgres.DB
 }
 
+// NewPostgresRepo creates an object for interaction with Postgres.
 func NewPostgresRepo(pg *postgres.DB) (*PostgresRepo, error) {
 	return &PostgresRepo{pg}, nil
 }
 
+// GetMetricsNames gets an all metrics names from the database.
 func (r *PostgresRepo) GetMetricsNames(ctx context.Context) []string {
 	res := make([]string, 0)
 	pgxscan.Select(ctx, r.Pool, &res, "select name from metrics;")
@@ -25,6 +29,7 @@ func (r *PostgresRepo) GetMetricsNames(ctx context.Context) []string {
 	return res
 }
 
+// GetMetrics gets a metrics by its name from the database.
 func (r *PostgresRepo) GetMetrics(ctx context.Context, name string) (entity.Metrics, error) {
 	q, args, err := r.Builder.
 		Select(
@@ -52,6 +57,7 @@ func (r *PostgresRepo) GetMetrics(ctx context.Context, name string) (entity.Metr
 	return dst[0], nil
 }
 
+// StoreMetrics stores a metrics into the database.
 func (r *PostgresRepo) StoreMetrics(ctx context.Context, metrics entity.Metrics) error {
 	updateQuery, updateArgs, err := r.Builder.
 		Update("metrics").

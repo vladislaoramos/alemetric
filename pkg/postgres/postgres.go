@@ -1,3 +1,4 @@
+// Package postgres provides a mechanism of interacting with specific PostgresSQL implementation.
 package postgres
 
 import (
@@ -25,6 +26,7 @@ type DB struct {
 	Builder squirrel.StatementBuilderType
 }
 
+// New creates a database object.
 func New(url string) (*DB, error) {
 	db := &DB{
 		connAttempts: connAttempts,
@@ -60,6 +62,7 @@ func New(url string) (*DB, error) {
 	return db, nil
 }
 
+// Close closes the connection with a database.
 func (p *DB) Close() {
 	if p.Pool == nil {
 		p.Pool.Close()

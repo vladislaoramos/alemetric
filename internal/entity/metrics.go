@@ -1,3 +1,5 @@
+// Package entity contains Metrics entity its methods.
+// Server responses such metrics to requests of Agent.
 package entity
 
 import (
@@ -18,14 +20,18 @@ const (
 	gauge   = "gauge"
 )
 
+// Metrics stores data of a metrics.
+// It contains such attributes: ID, MType, Delta, Value, Hash.
+// A correct metrics must have either Delta or Value.
 type Metrics struct {
-	ID    string   `json:"id" db:"name"`    // имя метрики
-	MType string   `json:"type" db:"mtype"` // параметр, принимающий значение gauge или counter
-	Delta *Counter `json:"delta,omitempty"` // значение метрики в случае передачи counter
-	Value *Gauge   `json:"value,omitempty"` // значение метрики в случае передачи gauge
-	Hash  string   `json:"hash,omitempty"`  // значение хеш-функции
+	ID    string   `json:"id" db:"name"`    // metrics name
+	MType string   `json:"type" db:"mtype"` // metrics type: either gauge or counter
+	Delta *Counter `json:"delta,omitempty"` // metrics value if the type is counter
+	Value *Gauge   `json:"value,omitempty"` // metrics value if the type is  gauge
+	Hash  string   `json:"hash,omitempty"`  // a hash function value
 }
 
+// ParseGaugeMetrics parses Metrics with Gauge type.
 func ParseGaugeMetrics(value string) (Gauge, error) {
 	s, err := strconv.ParseFloat(value, 64)
 	if err != nil {
@@ -35,6 +41,7 @@ func ParseGaugeMetrics(value string) (Gauge, error) {
 	return Gauge(s), nil
 }
 
+// ParseCounterMetrics parses Metrics with Counter type.
 func ParseCounterMetrics(value string) (Counter, error) {
 	s, err := strconv.Atoi(value)
 	if err != nil {
@@ -51,6 +58,7 @@ func (c Counter) Type() string {
 	return counter
 }
 
+// SignData signs an object of metrics.
 func (m *Metrics) SignData(app, key string) {
 	if key != "" {
 		m.Hash = m.hash(key)
@@ -76,6 +84,7 @@ func (m *Metrics) hash(key string) string {
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
+// CheckDataSign checks if a metrics is signed.
 func (m *Metrics) CheckDataSign(key string) bool {
 	return m.Hash == m.hash(key)
 }

@@ -1,3 +1,5 @@
+// Package configs provides a mechanism for downloading and
+// using configuration files for the server and agent.
 package configs
 
 import (
@@ -7,6 +9,7 @@ import (
 	"github.com/ilyakaznacheev/cleanenv"
 )
 
+// Config stores agent, server, and logger configurations.
 type Config struct {
 	Agent    `yaml:"agent"`
 	Server   `yaml:"server"`
@@ -14,14 +17,23 @@ type Config struct {
 	Database `yaml:"database"`
 }
 
+// Logger stores the attribute of the logger level.
 type Logger struct {
 	Level string `yaml:"level"`
 }
 
+// Database stores the attribute of the database repository.
+// This type of repository is defined by the database DSN (data source name).
+// The attribute value are filled in from environment variable or flag.
+// If the attribute is not specified, in-memory storage is used.
 type Database struct {
 	URL string `env:"DATABASE_DSN"`
 }
 
+// Agent stores the attributes of the agent.
+// Among them: Address, PollInterval, ReportInterval, RateLimit, Key.
+// Attribute values are filled in from environment variables or flags.
+// If neither is specified, the default values are applied.
 type Agent struct {
 	Name           string        `yaml:"name"`
 	PollInterval   time.Duration `yaml:"pollInterval" env:"POLL_INTERVAL"`
@@ -32,6 +44,10 @@ type Agent struct {
 	RateLimit      uint          `env:"RATE_LIMIT" env-default:"1"`
 }
 
+// Server stores the attributes of the server.
+// Among them: Address, StoreInterval, StoreFile, Restore, Key.
+// Attribute values are filled in from environment variables or flags.
+// If neither is specified, the default values are applied.
 type Server struct {
 	Name          string        `yaml:"name" env:"NAME"`
 	Address       string        `yaml:"address" env:"ADDRESS"`
@@ -208,6 +224,10 @@ func (c *Config) parseFlags(app string) {
 	flag.Parse()
 }
 
+// NewConfig creates a configuration object according to the selected mode: agent or server.
+// The config is enriched with values from environment variables and flags.
+// Preference is given to environment variables.
+// If neither flags nor environment variables were passed, the default config is returned.
 func NewConfig(app string) *Config {
 	var (
 		cfg   *Config

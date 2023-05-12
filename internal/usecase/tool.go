@@ -16,6 +16,7 @@ const (
 	Gauge   = "gauge"
 )
 
+// ToolUseCase stores the tool object.
 type ToolUseCase struct {
 	repo   MetricsRepo
 	logger logger.LogInterface
@@ -30,6 +31,7 @@ type ToolUseCase struct {
 	encryptionKey string
 }
 
+// NewMetricsTool creates a tool object.
 func NewMetricsTool(repo MetricsRepo, l logger.LogInterface, options ...OptionFunc) *ToolUseCase {
 	useCase := &ToolUseCase{repo: repo, logger: l}
 
@@ -67,11 +69,13 @@ func (mt *ToolUseCase) saveStorage() {
 	}
 }
 
+// GetMetricsNames gets all metrics names from the tool.
 func (mt *ToolUseCase) GetMetricsNames(ctx context.Context) ([]string, error) {
 	names := mt.repo.GetMetricsNames(ctx)
 	return names, nil
 }
 
+// StoreMetrics stores a metrics into the tool.
 func (mt *ToolUseCase) StoreMetrics(ctx context.Context, metrics entity.Metrics) error {
 	if mt.checkDataSign && !metrics.CheckDataSign(mt.encryptionKey) {
 		return ErrDataSignNotEqual
@@ -119,6 +123,7 @@ func (mt *ToolUseCase) StoreMetrics(ctx context.Context, metrics entity.Metrics)
 	return nil
 }
 
+// GetMetrics gets a metrics from the tool.
 func (mt *ToolUseCase) GetMetrics(ctx context.Context, metrics entity.Metrics) (entity.Metrics, error) {
 	res, err := mt.repo.GetMetrics(ctx, metrics.ID)
 	if err != nil {
