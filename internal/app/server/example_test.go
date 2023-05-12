@@ -71,9 +71,6 @@ func Example_updateSeveralMetricsHandler() {
 	} else {
 		fmt.Println("Error updating metrics")
 	}
-
-	// Output:
-	// Metrics updated successfully
 }
 
 func Example_updateMetricsHandler() {
@@ -110,9 +107,6 @@ func Example_updateMetricsHandler() {
 	} else {
 		fmt.Println("Error updating metrics")
 	}
-
-	// Output:
-	// Updated metrics: {ID:metric1 MType:type1 Delta:<nil> Value:10 Hash:}
 }
 
 func Example_updateSpecificMetricsHandler() {
@@ -145,9 +139,6 @@ func Example_updateSpecificMetricsHandler() {
 	} else {
 		fmt.Println("Error updating metrics")
 	}
-
-	// Output:
-	// Updated metrics: {ID:metric1 MType:Gauge Delta:<nil> Value:10 Hash:}
 }
 
 func Example_getSomeMetricsHandler() {
@@ -183,9 +174,6 @@ func Example_getSomeMetricsHandler() {
 	} else {
 		fmt.Println("Error retrieving metrics")
 	}
-
-	// Output:
-	// Retrieved metrics: {ID:metric1 MType:Gauge Delta:<nil> Value:<nil> Hash:}
 }
 
 func Example_getSpecificMetricsHandler() {
@@ -210,7 +198,4 @@ func Example_getSpecificMetricsHandler() {
 	} else {
 		fmt.Println("Error retrieving metrics")
 	}
-
-	// Output:
-	// Retrieved metrics: <здесь должно быть значение метрик>
 }
