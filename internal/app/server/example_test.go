@@ -14,7 +14,7 @@ import (
 	logger "github.com/vladislaoramos/alemetric/pkg/log"
 )
 
-func ExampleHandler_GetMetricsHandler() {
+func Example_getMetricsHandler() {
 	var buf bytes.Buffer
 	log := logger.New("debug", &buf)
 	metricsRepo, _ := repo.NewMetricsRepo()
@@ -30,7 +30,7 @@ func ExampleHandler_GetMetricsHandler() {
 	fmt.Println(rec.Body.String())
 }
 
-func ExamplePingHandler() {
+func Example_pingHandler() {
 	var buf bytes.Buffer
 	log := logger.New("debug", &buf)
 	metricsRepo, _ := repo.NewMetricsRepo()
@@ -46,7 +46,7 @@ func ExamplePingHandler() {
 	fmt.Println(rec.Code)
 }
 
-func ExampleUpdateSeveralMetricsHandler() {
+func Example_updateSeveralMetricsHandler() {
 	var buf bytes.Buffer
 	log := logger.New("debug", &buf)
 	metricsRepo, _ := repo.NewMetricsRepo()
@@ -76,7 +76,7 @@ func ExampleUpdateSeveralMetricsHandler() {
 	// Metrics updated successfully
 }
 
-func ExampleUpdateMetricsHandler() {
+func Example_updateMetricsHandler() {
 	var buf bytes.Buffer
 	log := logger.New("debug", &buf)
 	metricsRepo, _ := repo.NewMetricsRepo()
@@ -115,7 +115,7 @@ func ExampleUpdateMetricsHandler() {
 	// Updated metrics: {ID:metric1 MType:type1 Delta:<nil> Value:10 Hash:}
 }
 
-func ExampleUpdateSpecificMetricsHandler() {
+func Example_updateSpecificMetricsHandler() {
 	var buf bytes.Buffer
 	log := logger.New("debug", &buf)
 	metricsRepo, _ := repo.NewMetricsRepo()
@@ -150,7 +150,7 @@ func ExampleUpdateSpecificMetricsHandler() {
 	// Updated metrics: {ID:metric1 MType:Gauge Delta:<nil> Value:10 Hash:}
 }
 
-func ExampleGetSomeMetricsHandler() {
+func Example_getSomeMetricsHandler() {
 	var buf bytes.Buffer
 	log := logger.New("debug", &buf)
 	metricsRepo, _ := repo.NewMetricsRepo()
@@ -188,7 +188,7 @@ func ExampleGetSomeMetricsHandler() {
 	// Retrieved metrics: {ID:metric1 MType:Gauge Delta:<nil> Value:<nil> Hash:}
 }
 
-func ExampleGetSpecificMetricsHandler() {
+func Example_getSpecificMetricsHandler() {
 	var buf bytes.Buffer
 	log := logger.New("debug", &buf)
 	metricsRepo, _ := repo.NewMetricsRepo()
