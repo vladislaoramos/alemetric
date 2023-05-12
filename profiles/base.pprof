@@ -1,0 +1,14 @@
+Showing nodes accounting for 146.41MB, 98.32% of 148.91MB total
+Dropped 18 nodes (cum <= 0.74MB)
+Showing top 10 nodes out of 35
+      flat  flat%   sum%        cum   cum%
+  123.40MB 82.87% 82.87%   145.91MB 97.98%  compress/flate.NewWriter
+   21.37MB 14.35% 97.22%    21.37MB 14.35%  compress/flate.(*compressor).initDeflate (inline)
+       1MB  0.67% 97.89%        1MB  0.67%  compress/flate.(*huffmanEncoder).generate
+    0.64MB  0.43% 98.32%    22.51MB 15.11%  compress/flate.(*compressor).init
+         0     0% 98.32%        1MB  0.67%  compress/flate.(*Writer).Close
+         0     0% 98.32%        1MB  0.67%  compress/flate.(*compressor).close
+         0     0% 98.32%        1MB  0.67%  compress/flate.(*compressor).deflate
+         0     0% 98.32%        1MB  0.67%  compress/flate.(*compressor).writeBlock
+         0     0% 98.32%        1MB  0.67%  compress/flate.(*huffmanBitWriter).indexTokens
+         0     0% 98.32%        1MB  0.67%  compress/flate.(*huffmanBitWriter).writeBlock
