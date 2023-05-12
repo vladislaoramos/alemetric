@@ -3,6 +3,7 @@ package repo
 import (
 	"context"
 	"fmt"
+
 	sq "github.com/Masterminds/squirrel"
 	"github.com/georgysavva/scany/pgxscan"
 	"github.com/vladislaoramos/alemetric/internal/entity"

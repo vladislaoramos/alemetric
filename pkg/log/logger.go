@@ -1,9 +1,10 @@
 package logger
 
 import (
-	"github.com/sirupsen/logrus"
 	"io"
 	"strings"
+
+	"github.com/sirupsen/logrus"
 )
 
 type LogInterface interface {

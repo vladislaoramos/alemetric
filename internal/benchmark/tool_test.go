@@ -3,11 +3,12 @@ package benchmark
 import (
 	"bytes"
 	"context"
+	"testing"
+
 	"github.com/vladislaoramos/alemetric/internal/entity"
 	"github.com/vladislaoramos/alemetric/internal/repo"
 	"github.com/vladislaoramos/alemetric/internal/usecase"
 	logger "github.com/vladislaoramos/alemetric/pkg/log"
-	"testing"
 )
 
 func BenchmarkToolGetMetrics(b *testing.B) {

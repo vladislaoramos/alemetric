@@ -1,10 +1,11 @@
 package agent
 
 import (
-	"github.com/vladislaoramos/alemetric/internal/entity"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/vladislaoramos/alemetric/internal/entity"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/stretchr/testify/require"

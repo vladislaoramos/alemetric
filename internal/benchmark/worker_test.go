@@ -1,12 +1,13 @@
 package benchmark
 
 import (
-	"github.com/vladislaoramos/alemetric/internal/app/agent"
-	"github.com/vladislaoramos/alemetric/internal/entity"
-	"github.com/vladislaoramos/alemetric/internal/usecase"
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/vladislaoramos/alemetric/internal/app/agent"
+	"github.com/vladislaoramos/alemetric/internal/entity"
+	"github.com/vladislaoramos/alemetric/internal/usecase"
 )
 
 var metricsNames = []string{

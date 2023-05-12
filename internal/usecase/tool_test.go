@@ -3,6 +3,9 @@ package usecase
 import (
 	"context"
 	"errors"
+	"os"
+	"testing"
+
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -10,8 +13,6 @@ import (
 	"github.com/vladislaoramos/alemetric/internal/repo"
 	"github.com/vladislaoramos/alemetric/internal/usecase/mocks"
 	logger "github.com/vladislaoramos/alemetric/pkg/log"
-	"os"
-	"testing"
 )
 
 func testLogger() *logger.Logger {

@@ -2,11 +2,12 @@ package agent
 
 import (
 	"fmt"
-	"github.com/vladislaoramos/alemetric/internal/usecase"
 	"reflect"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/vladislaoramos/alemetric/internal/usecase"
 
 	logger "github.com/vladislaoramos/alemetric/pkg/log"
 

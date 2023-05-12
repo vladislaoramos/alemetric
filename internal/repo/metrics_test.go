@@ -3,13 +3,14 @@ package repo
 import (
 	"context"
 	"encoding/json"
-	"github.com/stretchr/testify/require"
-	"github.com/vladislaoramos/alemetric/internal/entity"
 	"os"
 	"path/filepath"
 	"sort"
 	"sync"
 	"testing"
+
+	"github.com/stretchr/testify/require"
+	"github.com/vladislaoramos/alemetric/internal/entity"
 )
 
 func TestMetricsRepo_GetMetrics(t *testing.T) {

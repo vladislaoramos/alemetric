@@ -1,12 +1,13 @@
 package server
 
 import (
+	"os"
+	"testing"
+
 	"github.com/golang/mock/gomock"
 	"github.com/vladislaoramos/alemetric/internal/usecase"
 	"github.com/vladislaoramos/alemetric/internal/usecase/mocks"
 	logger "github.com/vladislaoramos/alemetric/pkg/log"
-	"os"
-	"testing"
 )
 
 func testLogger() *logger.Logger {

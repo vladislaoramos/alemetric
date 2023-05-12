@@ -1,8 +1,9 @@
 package entity
 
 import (
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestParseGaugeMetrics(t *testing.T) {

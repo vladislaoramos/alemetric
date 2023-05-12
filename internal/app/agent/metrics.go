@@ -1,12 +1,13 @@
 package agent
 
 import (
-	"github.com/shirou/gopsutil/v3/cpu"
-	"github.com/shirou/gopsutil/v3/mem"
-	"github.com/vladislaoramos/alemetric/internal/entity"
 	"math/rand"
 	"runtime"
 	"sync"
+
+	"github.com/shirou/gopsutil/v3/cpu"
+	"github.com/shirou/gopsutil/v3/mem"
+	"github.com/vladislaoramos/alemetric/internal/entity"
 )
 
 type Metrics struct {

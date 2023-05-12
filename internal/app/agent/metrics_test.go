@@ -1,11 +1,12 @@
 package agent
 
 import (
-	"github.com/shirou/gopsutil/v3/mem"
-	"github.com/vladislaoramos/alemetric/internal/entity"
 	"runtime"
 	"sync"
 	"testing"
+
+	"github.com/shirou/gopsutil/v3/mem"
+	"github.com/vladislaoramos/alemetric/internal/entity"
 
 	"github.com/stretchr/testify/require"
 )

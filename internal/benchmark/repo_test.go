@@ -3,9 +3,10 @@ package benchmark
 import (
 	"context"
 	"fmt"
+	"testing"
+
 	"github.com/vladislaoramos/alemetric/internal/entity"
 	"github.com/vladislaoramos/alemetric/internal/repo"
-	"testing"
 )
 
 func BenchmarkGetMetricsNames(b *testing.B) {

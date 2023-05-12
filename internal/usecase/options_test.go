@@ -1,9 +1,10 @@
 package usecase
 
 import (
-	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestWriteFileWithDuration(t *testing.T) {
