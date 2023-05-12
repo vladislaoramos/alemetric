@@ -82,6 +82,8 @@ func BenchmarkCollectMetricsStruct(b *testing.B) {
 
 			tasks = append(tasks, task)
 		}
+
+		_ = tasks
 	}
 }
 
@@ -337,5 +339,7 @@ func BenchmarkCollectMetricsMap(b *testing.B) {
 
 			tasks = append(tasks, metrics)
 		}
+
+		_ = tasks
 	}
 }
