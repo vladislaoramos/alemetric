@@ -1,0 +1,14 @@
+Showing nodes accounting for 145.34MB, 98.30% of 147.86MB total
+Dropped 15 nodes (cum <= 0.74MB)
+Showing top 10 nodes out of 49
+      flat  flat%   sum%        cum   cum%
+  117.23MB 79.29% 79.29%   141.82MB 95.92%  compress/flate.NewWriter
+   22.96MB 15.53% 94.81%    22.96MB 15.53%  compress/flate.(*compressor).initDeflate (inline)
+       2MB  1.36% 96.17%        2MB  1.36%  compress/flate.(*huffmanEncoder).generate
+    1.51MB  1.02% 97.19%     1.51MB  1.02%  io.glob..func1
+       1MB  0.68% 97.87%        1MB  0.68%  compress/flate.newHuffmanBitWriter (inline)
+    0.64MB  0.43% 98.30%    24.59MB 16.63%  compress/flate.(*compressor).init
+         0     0% 98.30%     1.51MB  1.02%  bufio.(*Writer).Flush
+         0     0% 98.30%        2MB  1.36%  compress/flate.(*Writer).Close
+         0     0% 98.30%        2MB  1.36%  compress/flate.(*compressor).close
+         0     0% 98.30%        2MB  1.36%  compress/flate.(*compressor).deflate

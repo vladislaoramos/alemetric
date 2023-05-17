@@ -2,8 +2,9 @@ package server
 
 import (
 	"errors"
-	"github.com/vladislaoramos/alemetric/internal/usecase"
 	"net/http"
+
+	"github.com/vladislaoramos/alemetric/internal/usecase"
 )
 
 func errorHandler(w http.ResponseWriter, err error) {

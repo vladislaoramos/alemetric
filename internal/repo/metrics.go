@@ -13,6 +13,7 @@ import (
 	"github.com/vladislaoramos/alemetric/internal/entity"
 )
 
+// MetricsRepo stores the object for interaction with the in-memory storage.
 type MetricsRepo struct {
 	storage       map[string]entity.Metrics
 	Mu            *sync.Mutex
@@ -20,6 +21,7 @@ type MetricsRepo struct {
 	Restore       bool
 }
 
+// NewMetricsRepo creates the in-memory storage object.
 func NewMetricsRepo(options ...OptionFunc) (*MetricsRepo, error) {
 	metricsRepo := &MetricsRepo{
 		Mu:      &sync.Mutex{},
@@ -40,6 +42,7 @@ func NewMetricsRepo(options ...OptionFunc) (*MetricsRepo, error) {
 	return metricsRepo, nil
 }
 
+// GetMetricsNames gets all metrics names from the in-memory storage.
 func (r *MetricsRepo) GetMetricsNames(_ context.Context) []string {
 	var list []string
 	r.Mu.Lock()
@@ -50,6 +53,7 @@ func (r *MetricsRepo) GetMetricsNames(_ context.Context) []string {
 	return list
 }
 
+// StoreMetrics stores a metrics into the in-memory storage.
 func (r *MetricsRepo) StoreMetrics(_ context.Context, metrics entity.Metrics) error {
 	r.Mu.Lock()
 	r.storage[metrics.ID] = metrics
@@ -57,6 +61,7 @@ func (r *MetricsRepo) StoreMetrics(_ context.Context, metrics entity.Metrics) er
 	return nil
 }
 
+// GetMetrics gets a metrics from the in-memory storage.
 func (r *MetricsRepo) GetMetrics(_ context.Context, name string) (entity.Metrics, error) {
 	r.Mu.Lock()
 	defer r.Mu.Unlock()
@@ -67,6 +72,7 @@ func (r *MetricsRepo) GetMetrics(_ context.Context, name string) (entity.Metrics
 	return value, nil
 }
 
+// StoreAll stores all metrics from the in-memory storage to the store file.
 func (r *MetricsRepo) StoreAll() error {
 	file, err := os.OpenFile(r.StoreFilePath, os.O_WRONLY|os.O_CREATE, 0777)
 	if err != nil {
@@ -97,6 +103,7 @@ func (r *MetricsRepo) StoreAll() error {
 	return nil
 }
 
+// Upload uploads all metrics from the store file into the in-memory storage.
 func (r *MetricsRepo) Upload(_ context.Context) error {
 	r.Mu.Lock()
 	defer r.Mu.Unlock()

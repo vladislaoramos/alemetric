@@ -1,3 +1,4 @@
+// Package server contains the implementation of the client application.
 package server
 
 import (
@@ -12,6 +13,7 @@ import (
 	"github.com/vladislaoramos/alemetric/pkg/postgres"
 )
 
+// Run method launches the server application.
 func Run(cfg *configs.Config, lgr *logger.Logger) {
 	repoOpts := make([]repo.OptionFunc, 0)
 	if cfg.Server.StoreFile != "" {

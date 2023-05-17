@@ -1,10 +1,11 @@
 package agent
 
 import (
-	"github.com/vladislaoramos/alemetric/internal/entity"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/vladislaoramos/alemetric/internal/entity"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/stretchr/testify/require"
@@ -84,6 +85,65 @@ func TestWebAPI_SendMetric(t *testing.T) {
 			val := entity.Gauge(tt.args.metricsValue)
 
 			err := webAPI.SendMetrics(tt.args.metricsName, tt.args.metricsType, nil, &val)
+			if !tt.wantErr {
+				return
+			}
+			require.Error(t, err)
+		})
+	}
+}
+
+func TestWebAPI_SendSeveralMetric(t *testing.T) {
+	val := 100.500
+	arg := entity.Metrics{
+		ID:    "Frees",
+		MType: "gauge",
+		Delta: nil,
+		Value: (*entity.Gauge)(&val),
+	}
+	tests := []struct {
+		name           string
+		args           []entity.Metrics
+		response       int
+		withTestServer bool
+		wantErr        bool
+	}{
+		{
+			name:           "simple test with success",
+			args:           []entity.Metrics{arg},
+			response:       http.StatusOK,
+			withTestServer: true,
+			wantErr:        false,
+		},
+		{
+			name:           "simple test with error",
+			args:           []entity.Metrics{arg},
+			response:       http.StatusBadRequest,
+			withTestServer: true,
+			wantErr:        true,
+		},
+		{
+			name:           "simple test without server",
+			args:           []entity.Metrics{arg},
+			withTestServer: false,
+			wantErr:        true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(tt.response)
+			}))
+			defer testServer.Close()
+
+			var serverURL string
+			if tt.withTestServer {
+				serverURL = testServer.URL
+			}
+
+			webAPI := &WebAPIClient{resty.New().SetBaseURL(serverURL), noEncryptionKey}
+
+			err := webAPI.SendSeveralMetrics(tt.args)
 			if !tt.wantErr {
 				return
 			}

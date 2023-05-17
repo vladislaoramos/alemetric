@@ -8,6 +8,7 @@ import (
 	"github.com/vladislaoramos/alemetric/internal/entity"
 )
 
+// WebAPIClient implements the client web-application for Agent.
 type WebAPIClient struct {
 	client *resty.Client
 	Key    string
@@ -20,6 +21,7 @@ func NewWebAPI(client *resty.Client, key string) *WebAPIClient {
 	}
 }
 
+// SendMetrics sends a client request for a metrics update to the server.
 func (wc *WebAPIClient) SendMetrics(
 	metricsName,
 	metricsType string,
@@ -55,6 +57,7 @@ func (wc *WebAPIClient) SendMetrics(
 	return nil
 }
 
+// SendSeveralMetrics sends a client request for several metrics update to the server.
 func (wc *WebAPIClient) SendSeveralMetrics(items []entity.Metrics) error {
 	resp, err := wc.client.
 		R().

@@ -1,14 +1,16 @@
 package agent
 
 import (
-	"github.com/shirou/gopsutil/v3/cpu"
-	"github.com/shirou/gopsutil/v3/mem"
-	"github.com/vladislaoramos/alemetric/internal/entity"
 	"math/rand"
 	"runtime"
 	"sync"
+
+	"github.com/shirou/gopsutil/v3/cpu"
+	"github.com/shirou/gopsutil/v3/mem"
+	"github.com/vladislaoramos/alemetric/internal/entity"
 )
 
+// Metrics contains a set of metrics that the agent collects and sends to the server.
 type Metrics struct {
 	PollCount   entity.Counter
 	RandomValue entity.Gauge
@@ -56,6 +58,7 @@ func NewMetrics() *Metrics {
 	}
 }
 
+// CollectMetrics updates the general metrics.
 func (m *Metrics) CollectMetrics() {
 	memStats := &runtime.MemStats{}
 	runtime.ReadMemStats(memStats)
@@ -68,6 +71,7 @@ func (m *Metrics) CollectMetrics() {
 	m.RandomValue = entity.Gauge(rand.Float64())
 }
 
+// CollectAdditionalMetrics updates the additional metrics.
 func (m *Metrics) CollectAdditionalMetrics() {
 	m.Mu.Lock()
 	defer m.Mu.Unlock()

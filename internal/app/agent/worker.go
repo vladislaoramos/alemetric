@@ -2,17 +2,19 @@ package agent
 
 import (
 	"fmt"
-	"github.com/vladislaoramos/alemetric/internal/usecase"
 	"reflect"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/vladislaoramos/alemetric/internal/usecase"
 
 	logger "github.com/vladislaoramos/alemetric/pkg/log"
 
 	"github.com/vladislaoramos/alemetric/internal/entity"
 )
 
+// Worker implements a mechanism of asynchronous metrics sending from agent to server.
 type Worker struct {
 	webAPI           WebAPIAgent
 	metrics          *Metrics
@@ -21,6 +23,8 @@ type Worker struct {
 	rateLimitCounter uint
 }
 
+// NewWorker creates a worker object.
+// Worker can work asynchronously if the transmitted rate limit is greater than 1.
 func NewWorker(
 	l logger.LogInterface,
 	metrics *Metrics,
@@ -36,6 +40,7 @@ func NewWorker(
 	}
 }
 
+// UpdateMetrics stores the general metrics according to the poll interval of Agent.
 func (w *Worker) UpdateMetrics(ticker *time.Ticker) {
 	for {
 		<-ticker.C
@@ -44,6 +49,7 @@ func (w *Worker) UpdateMetrics(ticker *time.Ticker) {
 	}
 }
 
+// UpdateAdditionalMetrics stores the additional metrics according to the poll interval of Agent.
 func (w *Worker) UpdateAdditionalMetrics(ticker *time.Ticker) {
 	for {
 		<-ticker.C
@@ -52,6 +58,7 @@ func (w *Worker) UpdateAdditionalMetrics(ticker *time.Ticker) {
 	}
 }
 
+// SendMetrics sends metrics according to the report interval of Agent.
 func (w *Worker) SendMetrics(ticker *time.Ticker) {
 	for {
 		<-ticker.C
