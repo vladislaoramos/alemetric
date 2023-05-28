@@ -165,7 +165,7 @@ func TestUpdateSeveralMetricsHandler(t *testing.T) {
 
 	reader := strings.NewReader(string(b))
 
-	statusCode, b := ts.testRequest(t, "POST", "/updates/", reader)
+	statusCode, _ := ts.testRequest(t, "POST", "/updates/", reader)
 	assert.Equal(t, http.StatusOK, statusCode)
 
 	for _, req := range requests {
