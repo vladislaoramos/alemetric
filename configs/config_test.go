@@ -63,12 +63,13 @@ func TestUpdateConfig(t *testing.T) {
 
 		flags := &Config{
 			Agent: Agent{
-				Name:           agentName,
+				Name:           agentName + "1",
 				PollInterval:   time.Second * 3,
 				ReportInterval: time.Second * 9,
 				ServerURL:      "0.0.0.0:8888",
 				MetricsNames:   metricsNames,
 				RateLimit:      rateLimit * 2,
+				Key:            "key",
 			},
 		}
 
@@ -78,6 +79,8 @@ func TestUpdateConfig(t *testing.T) {
 		require.Equal(t, time.Second*3, cfg.Agent.PollInterval)
 		require.Equal(t, time.Second*9, cfg.Agent.ReportInterval)
 		require.Equal(t, uint(2), cfg.Agent.RateLimit)
+		require.Equal(t, "alemetric-agent1", cfg.Agent.Name)
+		require.Equal(t, "key", cfg.Agent.Key)
 	})
 
 	t.Run("server update", func(t *testing.T) {
@@ -85,11 +88,18 @@ func TestUpdateConfig(t *testing.T) {
 
 		flags := &Config{
 			Server: Server{
-				Name:          serverName,
+				Name:          serverName + "1",
 				Address:       "0.0.0.0:8888",
 				StoreInterval: time.Second * 60,
 				StoreFile:     "file.json",
 				Restore:       false,
+				Key:           "key",
+			},
+			Database: Database{
+				URL: "url",
+			},
+			Logger: Logger{
+				Level: "debug",
 			},
 		}
 
@@ -99,5 +109,9 @@ func TestUpdateConfig(t *testing.T) {
 		require.Equal(t, time.Second*60, cfg.Server.StoreInterval)
 		require.Equal(t, "file.json", cfg.Server.StoreFile)
 		require.Equal(t, false, cfg.Server.Restore)
+		require.Equal(t, "alemetric-server1", cfg.Server.Name)
+		require.Equal(t, "key", cfg.Server.Key)
+		require.Equal(t, "url", cfg.Database.URL)
+		require.Equal(t, "debug", cfg.Logger.Level)
 	})
 }
