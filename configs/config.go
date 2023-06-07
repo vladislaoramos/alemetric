@@ -42,6 +42,7 @@ type Agent struct {
 	MetricsNames   []string      `yaml:"metricsNames"`
 	Key            string        `env:"KEY"`
 	RateLimit      uint          `env:"RATE_LIMIT" env-default:"1"`
+	CryptoKey      string        `env:"CRYPTO_KEY"`
 }
 
 // Server stores the attributes of the server.
@@ -55,6 +56,7 @@ type Server struct {
 	StoreFile     string        `yaml:"storeFile" env:"STORE_FILE"`
 	Restore       bool          `yaml:"restore" env:"RESTORE"`
 	Key           string        `env:"KEY"`
+	CryptoKey     string        `env:"CRYPTO_KEY"`
 }
 
 const (
@@ -168,6 +170,10 @@ func (c *Config) updateAgentConfigs(v *Config) {
 	if v.RateLimit != 1 && c.RateLimit != v.RateLimit {
 		c.RateLimit = v.RateLimit
 	}
+
+	if v.Agent.CryptoKey != "" && c.Agent.CryptoKey != v.Agent.CryptoKey {
+		c.Agent.CryptoKey = v.Agent.CryptoKey
+	}
 }
 
 func (c *Config) updateServerConfigs(v *Config) {
@@ -202,6 +208,10 @@ func (c *Config) updateServerConfigs(v *Config) {
 	if v.Server.Key != "" && c.Server.Key != v.Server.Key {
 		c.Server.Key = v.Server.Key
 	}
+
+	if v.Server.CryptoKey != "" && c.Server.CryptoKey != v.Server.CryptoKey {
+		c.Server.CryptoKey = v.Server.CryptoKey
+	}
 }
 
 func (c *Config) parseFlags(app string) {
@@ -212,6 +222,7 @@ func (c *Config) parseFlags(app string) {
 		flag.DurationVar(&c.Agent.PollInterval, "p", pollInterval, "poll interval")
 		flag.StringVar(&c.Agent.Key, "k", "", "encryption key")
 		flag.UintVar(&c.RateLimit, "l", rateLimit, "rate limit")
+		flag.StringVar(&c.Agent.CryptoKey, "crypto-key", "", "public crypto key for https requests")
 	case ServerConfig:
 		flag.StringVar(&c.Server.Address, "a", "", "server address")
 		flag.BoolVar(&c.Server.Restore, "r", true, "restore data from file")
@@ -219,6 +230,7 @@ func (c *Config) parseFlags(app string) {
 		flag.StringVar(&c.Server.StoreFile, "f", "", "store file")
 		flag.StringVar(&c.Server.Key, "k", "", "encryption key")
 		flag.StringVar(&c.Database.URL, "d", "", "database")
+		flag.StringVar(&c.Server.CryptoKey, "crypto-key", "", "private crypto key for tls")
 	}
 
 	flag.Parse()

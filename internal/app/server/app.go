@@ -3,14 +3,13 @@ package server
 
 import (
 	"fmt"
-	"net/http"
-
 	"github.com/go-chi/chi/v5"
 	"github.com/vladislaoramos/alemetric/configs"
 	"github.com/vladislaoramos/alemetric/internal/repo"
 	"github.com/vladislaoramos/alemetric/internal/usecase"
 	logger "github.com/vladislaoramos/alemetric/pkg/log"
 	"github.com/vladislaoramos/alemetric/pkg/postgres"
+	"net/http"
 )
 
 // Run method launches the server application.
@@ -64,7 +63,22 @@ func Run(cfg *configs.Config, lgr *logger.Logger) {
 	handler := chi.NewRouter()
 
 	mt := usecase.NewMetricsTool(curRepo, lgr, mtOptions...)
-	NewRouter(handler, mt, lgr)
+	NewRouter(handler, mt, lgr, cfg.Server.CryptoKey)
 
 	lgr.Fatal(http.ListenAndServe(cfg.Address, handler).Error())
 }
+
+//func getRSAPrivateKey(fileName string) (*rsa.PrivateKey, error) {
+//	keyBytes, err := os.ReadFile(fileName)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	block, _ := pem.Decode(keyBytes)
+//	prv, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	return prv, nil
+//}
