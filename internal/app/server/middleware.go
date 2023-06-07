@@ -100,6 +100,10 @@ func rsaHandler(keyPath string) func(next http.Handler) http.Handler {
 }
 
 func loadPrivateKeyFromFile(path string) (*rsa.PrivateKey, error) {
+	if path == "" {
+		return nil, nil
+	}
+
 	keyData, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read key file: %w", err)

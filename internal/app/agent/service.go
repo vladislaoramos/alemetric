@@ -113,6 +113,10 @@ func tryEncrypt(msg []byte, key *rsa.PublicKey) []byte {
 }
 
 func loadPublicKeyFromFile(filePath string) (*rsa.PublicKey, error) {
+	if filePath == "" {
+		return nil, nil
+	}
+
 	keyBytes, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, err

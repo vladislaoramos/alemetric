@@ -27,7 +27,7 @@ func TestNewWebAPI(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := NewWebAPI(tt.args, noEncryptionKey)
+			got := NewWebAPI(tt.args, noEncryptionKey, "")
 			require.Equal(t, got, tt.want)
 		})
 	}
@@ -80,7 +80,7 @@ func TestWebAPI_SendMetric(t *testing.T) {
 				serverURL = testServer.URL
 			}
 
-			webAPI := &WebAPIClient{resty.New().SetBaseURL(serverURL), noEncryptionKey}
+			webAPI := &WebAPIClient{resty.New().SetBaseURL(serverURL), noEncryptionKey, ""}
 
 			val := entity.Gauge(tt.args.metricsValue)
 
@@ -141,7 +141,7 @@ func TestWebAPI_SendSeveralMetric(t *testing.T) {
 				serverURL = testServer.URL
 			}
 
-			webAPI := &WebAPIClient{resty.New().SetBaseURL(serverURL), noEncryptionKey}
+			webAPI := &WebAPIClient{resty.New().SetBaseURL(serverURL), noEncryptionKey, ""}
 
 			err := webAPI.SendSeveralMetrics(tt.args)
 			if !tt.wantErr {
