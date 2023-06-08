@@ -15,8 +15,8 @@ import (
 
 // Config stores agent, server, and logger configurations.
 type Config struct {
-	Agent    `yaml:"agent"`
-	Server   `yaml:"server"`
+	Agent    `json:"agent" yaml:"agent"`
+	Server   `json:"server" yaml:"server"`
 	Logger   `yaml:"logger"`
 	Database `yaml:"database"`
 }
@@ -289,10 +289,15 @@ func loadAgentJSONConfig(path string) (*Config, error) {
 	}
 
 	config.Agent = agent.Agent
+
 	config.ReportInterval, err = time.ParseDuration(agent.ReportInterval)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse report interval from config file: %w", err)
+	}
+
 	config.PollInterval, err = time.ParseDuration(agent.PollInterval)
 	if err != nil {
-		return nil, fmt.Errorf("could not parse store interval from config file: %w", err)
+		return nil, fmt.Errorf("could not parse poll interval from config file: %w", err)
 	}
 
 	return &config, nil
@@ -358,6 +363,7 @@ func NewConfig(app string) *Config {
 		cfg.updateAgentConfigs(jsonConfig)
 
 		flags = new(Config)
+		flags.parseFlags(AgentConfig)
 		cfg.updateAgentConfigs(flags)
 
 		envs = new(Config)
@@ -375,6 +381,7 @@ func NewConfig(app string) *Config {
 		cfg.updateServerConfigs(jsonConfig)
 
 		flags = new(Config)
+		flags.parseFlags(ServerConfig)
 		cfg.updateServerConfigs(flags)
 
 		envs = new(Config)
