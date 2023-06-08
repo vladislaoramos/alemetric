@@ -354,16 +354,18 @@ func NewConfig(app string) *Config {
 	case AgentConfig:
 		cfg = defaultAgentCfg()
 
-		envJSONConfigPath := os.Getenv("CONFIG")
+		flags = new(Config)
 		jsonConfigPath := flags.parseFlags(AgentConfig)
+		envJSONConfigPath := os.Getenv("CONFIG")
 		if envJSONConfigPath != "" && envJSONConfigPath != jsonConfigPath {
 			jsonConfigPath = envJSONConfigPath
 		}
-		jsonConfig, _ := loadAgentJSONConfig(jsonConfigPath)
-		cfg.updateAgentConfigs(jsonConfig)
 
-		flags = new(Config)
-		flags.parseFlags(AgentConfig)
+		jsonConfig, _ := loadAgentJSONConfig(jsonConfigPath)
+		if jsonConfig != nil {
+			cfg.updateServerConfigs(jsonConfig)
+		}
+
 		cfg.updateAgentConfigs(flags)
 
 		envs = new(Config)
@@ -372,16 +374,18 @@ func NewConfig(app string) *Config {
 	case ServerConfig:
 		cfg = defaultServerCfg()
 
-		envJSONConfigPath := os.Getenv("CONFIG")
+		flags = new(Config)
 		jsonConfigPath := flags.parseFlags(ServerConfig)
+		envJSONConfigPath := os.Getenv("CONFIG")
 		if envJSONConfigPath != "" && envJSONConfigPath != jsonConfigPath {
 			jsonConfigPath = envJSONConfigPath
 		}
-		jsonConfig, _ := loadServerJSONConfig(jsonConfigPath)
-		cfg.updateServerConfigs(jsonConfig)
 
-		flags = new(Config)
-		flags.parseFlags(ServerConfig)
+		jsonConfig, _ := loadServerJSONConfig(jsonConfigPath)
+		if jsonConfig != nil {
+			cfg.updateServerConfigs(jsonConfig)
+		}
+
 		cfg.updateServerConfigs(flags)
 
 		envs = new(Config)
