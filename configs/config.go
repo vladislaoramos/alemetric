@@ -3,7 +3,11 @@
 package configs
 
 import (
+	"encoding/json"
 	"flag"
+	"fmt"
+	"io"
+	"os"
 	"time"
 
 	"github.com/ilyakaznacheev/cleanenv"
@@ -27,7 +31,7 @@ type Logger struct {
 // The attribute value are filled in from environment variable or flag.
 // If the attribute is not specified, in-memory storage is used.
 type Database struct {
-	URL string `env:"DATABASE_DSN"`
+	URL string `json:"database_dsn" env:"DATABASE_DSN"`
 }
 
 // Agent stores the attributes of the agent.
@@ -35,14 +39,20 @@ type Database struct {
 // Attribute values are filled in from environment variables or flags.
 // If neither is specified, the default values are applied.
 type Agent struct {
-	Name           string        `yaml:"name"`
-	PollInterval   time.Duration `yaml:"pollInterval" env:"POLL_INTERVAL"`
-	ReportInterval time.Duration `yaml:"reportInterval" env:"REPORT_INTERVAL"`
-	ServerURL      string        `yaml:"serverURL" env:"ADDRESS"`
-	MetricsNames   []string      `yaml:"metricsNames"`
-	Key            string        `env:"KEY"`
-	RateLimit      uint          `env:"RATE_LIMIT" env-default:"1"`
-	CryptoKey      string        `env:"CRYPTO_KEY"`
+	Name           string        `json:"name" yaml:"name"`
+	PollInterval   time.Duration `json:"poll_interval" yaml:"pollInterval" env:"POLL_INTERVAL"`
+	ReportInterval time.Duration `json:"report_interval" yaml:"reportInterval" env:"REPORT_INTERVAL"`
+	ServerURL      string        `json:"address" yaml:"serverURL" env:"ADDRESS"`
+	MetricsNames   []string      `json:"metrics_names" yaml:"metricsNames"`
+	Key            string        `json:"key" env:"KEY"`
+	RateLimit      uint          `json:"rate_limit" env:"RATE_LIMIT" env-default:"1"`
+	CryptoKey      string        `json:"crypto_key" env:"CRYPTO_KEY"`
+}
+
+type jsonAgent struct {
+	Agent
+	PollInterval   string `json:"poll_interval" yaml:"pollInterval" env:"POLL_INTERVAL"`
+	ReportInterval string `json:"report_interval" yaml:"reportInterval" env:"REPORT_INTERVAL"`
 }
 
 // Server stores the attributes of the server.
@@ -50,17 +60,24 @@ type Agent struct {
 // Attribute values are filled in from environment variables or flags.
 // If neither is specified, the default values are applied.
 type Server struct {
-	Name          string        `yaml:"name" env:"NAME"`
-	Address       string        `yaml:"address" env:"ADDRESS"`
-	StoreInterval time.Duration `yaml:"storeInterval" env:"STORE_INTERVAL"`
-	StoreFile     string        `yaml:"storeFile" env:"STORE_FILE"`
-	Restore       bool          `yaml:"restore" env:"RESTORE"`
-	Key           string        `env:"KEY"`
-	CryptoKey     string        `env:"CRYPTO_KEY"`
+	Name          string        `json:"name" yaml:"name" env:"NAME"`
+	Address       string        `json:"address" yaml:"address" env:"ADDRESS"`
+	StoreInterval time.Duration `json:"store_interval" yaml:"storeInterval" env:"STORE_INTERVAL"`
+	StoreFile     string        `json:"store_file" yaml:"storeFile" env:"STORE_FILE"`
+	Restore       bool          `json:"restore" yaml:"restore" env:"RESTORE"`
+	Key           string        `json:"key" env:"KEY"`
+	CryptoKey     string        `json:"crypto_key" env:"CRYPTO_KEY"`
+}
+
+type jsonServer struct {
+	Server
+	StoreInterval string `json:"store_interval" yaml:"storeInterval" env:"STORE_INTERVAL"`
 }
 
 const (
-	configPath = "./configs/config.yml"
+	configPath       = "./configs/config.yml"
+	agentJSONConfig  = "./configs/agent.json"
+	serverJSONConfig = "./configs/server.json"
 
 	serverURL = "127.0.0.1:8080"
 
@@ -214,7 +231,9 @@ func (c *Config) updateServerConfigs(v *Config) {
 	}
 }
 
-func (c *Config) parseFlags(app string) {
+func (c *Config) parseFlags(app string) string {
+	var jsonConfigPath string
+
 	switch app {
 	case AgentConfig:
 		flag.StringVar(&c.Agent.ServerURL, "a", serverURL, "server address")
@@ -223,6 +242,8 @@ func (c *Config) parseFlags(app string) {
 		flag.StringVar(&c.Agent.Key, "k", "", "encryption key")
 		flag.UintVar(&c.RateLimit, "l", rateLimit, "rate limit")
 		flag.StringVar(&c.Agent.CryptoKey, "crypto-key", "", "public crypto key for https requests")
+		flag.StringVar(&jsonConfigPath, "c", "", "json agent config path")
+		flag.StringVar(&jsonConfigPath, "config", "", "json agent config path")
 	case ServerConfig:
 		flag.StringVar(&c.Server.Address, "a", "", "server address")
 		flag.BoolVar(&c.Server.Restore, "r", true, "restore data from file")
@@ -231,9 +252,86 @@ func (c *Config) parseFlags(app string) {
 		flag.StringVar(&c.Server.Key, "k", "", "encryption key")
 		flag.StringVar(&c.Database.URL, "d", "", "database")
 		flag.StringVar(&c.Server.CryptoKey, "crypto-key", "", "private crypto key for tls")
+		flag.StringVar(&jsonConfigPath, "c", "", "json agent config path")
+		flag.StringVar(&jsonConfigPath, "config", "", "json agent config path")
 	}
 
 	flag.Parse()
+
+	return jsonConfigPath
+}
+
+func loadAgentJSONConfig(path string) (*Config, error) {
+	if path == "" {
+		return nil, nil
+	}
+
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, fmt.Errorf("could not open config file: %w", err)
+	}
+
+	var config Config
+	data, err := io.ReadAll(file)
+	if err != nil {
+		return nil, fmt.Errorf("could not read config file: %w", err)
+	}
+
+	var agent jsonAgent
+	err = json.Unmarshal(data, &agent)
+	if err != nil {
+		return nil, fmt.Errorf("error unmarshalling config file: %w", err)
+	}
+
+	err = file.Close()
+	if err != nil {
+		return nil, fmt.Errorf("could not close config file: %w", err)
+	}
+
+	config.Agent = agent.Agent
+	config.ReportInterval, err = time.ParseDuration(agent.ReportInterval)
+	config.PollInterval, err = time.ParseDuration(agent.PollInterval)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse store interval from config file: %w", err)
+	}
+
+	return &config, nil
+}
+
+func loadServerJSONConfig(path string) (*Config, error) {
+	if path == "" {
+		return nil, nil
+	}
+
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, fmt.Errorf("could not open config file: %w", err)
+	}
+
+	var config Config
+	data, err := io.ReadAll(file)
+	if err != nil {
+		return nil, fmt.Errorf("could not read config file: %w", err)
+	}
+
+	var srv jsonServer
+	err = json.Unmarshal(data, &srv)
+	if err != nil {
+		return nil, fmt.Errorf("error unmarshalling config file: %w", err)
+	}
+
+	err = file.Close()
+	if err != nil {
+		return nil, fmt.Errorf("could not close config file: %w", err)
+	}
+
+	config.Server = srv.Server
+	config.StoreInterval, err = time.ParseDuration(srv.StoreInterval)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse store interval from config file: %w", err)
+	}
+
+	return &config, nil
 }
 
 // NewConfig creates a configuration object according to the selected mode: agent or server.
@@ -251,8 +349,15 @@ func NewConfig(app string) *Config {
 	case AgentConfig:
 		cfg = defaultAgentCfg()
 
+		envJSONConfigPath := os.Getenv("CONFIG")
+		jsonConfigPath := flags.parseFlags(AgentConfig)
+		if envJSONConfigPath != "" && envJSONConfigPath != jsonConfigPath {
+			jsonConfigPath = envJSONConfigPath
+		}
+		jsonConfig, _ := loadAgentJSONConfig(jsonConfigPath)
+		cfg.updateAgentConfigs(jsonConfig)
+
 		flags = new(Config)
-		flags.parseFlags(AgentConfig)
 		cfg.updateAgentConfigs(flags)
 
 		envs = new(Config)
@@ -261,8 +366,15 @@ func NewConfig(app string) *Config {
 	case ServerConfig:
 		cfg = defaultServerCfg()
 
+		envJSONConfigPath := os.Getenv("CONFIG")
+		jsonConfigPath := flags.parseFlags(ServerConfig)
+		if envJSONConfigPath != "" && envJSONConfigPath != jsonConfigPath {
+			jsonConfigPath = envJSONConfigPath
+		}
+		jsonConfig, _ := loadServerJSONConfig(jsonConfigPath)
+		cfg.updateServerConfigs(jsonConfig)
+
 		flags = new(Config)
-		flags.parseFlags(ServerConfig)
 		cfg.updateServerConfigs(flags)
 
 		envs = new(Config)
