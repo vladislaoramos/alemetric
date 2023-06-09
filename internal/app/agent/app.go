@@ -32,7 +32,7 @@ func Run(cfg *configs.Config, lgr *logger.Logger) {
 	go worker.SendMetrics(sendTicker)
 
 	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 	stop := <-sigs
 
 	lgr.Info("Agent got stop signal: " + stop.String())
