@@ -89,4 +89,5 @@ func Run(cfg *configs.Config, lgr *logger.Logger) {
 		lgr.Fatal(err.Error())
 	}
 
+	<-idleConnsClosed
 }
