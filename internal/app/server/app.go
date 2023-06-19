@@ -2,15 +2,18 @@
 package server
 
 import (
+	"context"
 	"fmt"
-	"net/http"
-
 	"github.com/go-chi/chi/v5"
 	"github.com/vladislaoramos/alemetric/configs"
 	"github.com/vladislaoramos/alemetric/internal/repo"
 	"github.com/vladislaoramos/alemetric/internal/usecase"
 	logger "github.com/vladislaoramos/alemetric/pkg/log"
 	"github.com/vladislaoramos/alemetric/pkg/postgres"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 // Run method launches the server application.
@@ -64,7 +67,27 @@ func Run(cfg *configs.Config, lgr *logger.Logger) {
 	handler := chi.NewRouter()
 
 	mt := usecase.NewMetricsTool(curRepo, lgr, mtOptions...)
-	NewRouter(handler, mt, lgr)
+	NewRouter(handler, mt, lgr, cfg.Server.CryptoKey)
 
-	lgr.Fatal(http.ListenAndServe(cfg.Address, handler).Error())
+	var (
+		srv             = http.Server{Addr: cfg.Address, Handler: handler}
+		idleConnsClosed = make(chan struct{})
+		sigs            = make(chan os.Signal, 1)
+	)
+
+	signal.Notify(sigs, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
+
+	go func() {
+		<-sigs
+		if err = srv.Shutdown(context.Background()); err != nil {
+			lgr.Error(fmt.Sprintf("http server shutdown: %v", err))
+		}
+		close(idleConnsClosed)
+	}()
+
+	if err = srv.ListenAndServe(); err != http.ErrServerClosed {
+		lgr.Fatal(err.Error())
+	}
+
+	<-idleConnsClosed
 }

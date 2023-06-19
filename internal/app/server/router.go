@@ -17,7 +17,12 @@ const (
 	Counter = "counter"
 )
 
-func NewRouter(handler *chi.Mux, tool *usecase.ToolUseCase, l logger.LogInterface) {
+func NewRouter(
+	handler *chi.Mux,
+	tool *usecase.ToolUseCase,
+	l logger.LogInterface,
+	privateKeyPath string,
+) {
 	handler.Use(middleware.RequestID)
 	handler.Use(middleware.RealIP)
 	handler.Use(middleware.Logger)
@@ -37,6 +42,7 @@ func NewRouter(handler *chi.Mux, tool *usecase.ToolUseCase, l logger.LogInterfac
 
 	handler.Use(gzipWriteHandler)
 	handler.Use(gzipReadHandler)
+	handler.Use(rsaHandler(privateKeyPath))
 
 	handler.Get("/ping", pingHandler(tool, l))
 
