@@ -9,8 +9,10 @@ import (
 	"encoding/pem"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/vladislaoramos/alemetric/internal/entity"
@@ -29,6 +31,27 @@ func NewWebAPI(client *resty.Client, key string, cryptoKey string) *WebAPIClient
 		Key:       key,
 		publicKey: cryptoKey,
 	}
+}
+
+func splitHostPort(baseUrl string) (host, port string, err error) {
+	var url, prefix string
+
+	if strings.HasPrefix(baseUrl, "http://") {
+		prefix = "http://"
+	}
+
+	if strings.HasPrefix(baseUrl, "https://") {
+		prefix = "https://"
+	}
+
+	url = strings.TrimLeft(baseUrl, prefix)
+
+	host, port, err = net.SplitHostPort(url)
+	if err != nil {
+		return "", "", err
+	}
+
+	return host, port, nil
 }
 
 // SendMetrics sends a client request for a metrics update to the server.
@@ -62,9 +85,15 @@ func (wc *WebAPIClient) SendMetrics(
 
 	encryptedBody := tryEncrypt(b, publicKey)
 
+	realIP, _, err := splitHostPort(wc.client.BaseURL) // нужно передавать что-то другое или написать свой парсер срезая всё до слеша и до двоеточия
+	if err != nil {
+		return err
+	}
+
 	resp, err := wc.client.
 		R().
 		SetHeader("Content-Type", "application/json").
+		SetHeader("X-Real-IP", realIP).
 		SetBody(encryptedBody).
 		Post("/update/")
 	if err != nil {

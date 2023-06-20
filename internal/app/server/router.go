@@ -21,7 +21,7 @@ func NewRouter(
 	handler *chi.Mux,
 	tool *usecase.ToolUseCase,
 	l logger.LogInterface,
-	privateKeyPath string,
+	privateKeyPath, cidr string,
 ) {
 	handler.Use(middleware.RequestID)
 	handler.Use(middleware.RealIP)
@@ -43,6 +43,7 @@ func NewRouter(
 	handler.Use(gzipWriteHandler)
 	handler.Use(gzipReadHandler)
 	handler.Use(rsaHandler(privateKeyPath))
+	handler.Use(trustedSubnet(cidr))
 
 	handler.Get("/ping", pingHandler(tool, l))
 

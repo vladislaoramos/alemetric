@@ -67,7 +67,7 @@ func Run(cfg *configs.Config, lgr *logger.Logger) {
 	handler := chi.NewRouter()
 
 	mt := usecase.NewMetricsTool(curRepo, lgr, mtOptions...)
-	NewRouter(handler, mt, lgr, cfg.Server.CryptoKey)
+	NewRouter(handler, mt, lgr, cfg.Server.CryptoKey, cfg.Server.TrustedSubnet)
 
 	var (
 		srv             = http.Server{Addr: cfg.Address, Handler: handler}

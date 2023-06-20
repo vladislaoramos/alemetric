@@ -29,7 +29,7 @@ func NewTestServer(metricsStorage *repo.MetricsRepo, lgr *logger.Logger) TestSer
 	handler := chi.NewRouter()
 	mtOptions := make([]usecase.OptionFunc, 0)
 	mt := usecase.NewMetricsTool(metricsStorage, lgr, mtOptions...)
-	NewRouter(handler, mt, lgr, "")
+	NewRouter(handler, mt, lgr, "", "0.0.0.0/24")
 	ts := httptest.NewServer(handler)
 	return TestServer{
 		Server: ts,
