@@ -33,18 +33,18 @@ func NewWebAPI(client *resty.Client, key string, cryptoKey string) *WebAPIClient
 	}
 }
 
-func splitHostPort(baseUrl string) (host, port string, err error) {
+func splitHostPort(baseURL string) (host, port string, err error) {
 	var url, prefix string
 
-	if strings.HasPrefix(baseUrl, "http://") {
+	if strings.HasPrefix(baseURL, "http://") {
 		prefix = "http://"
 	}
 
-	if strings.HasPrefix(baseUrl, "https://") {
+	if strings.HasPrefix(baseURL, "https://") {
 		prefix = "https://"
 	}
 
-	url = strings.TrimLeft(baseUrl, prefix)
+	url = strings.TrimLeft(baseURL, prefix)
 
 	host, port, err = net.SplitHostPort(url)
 	if err != nil {
