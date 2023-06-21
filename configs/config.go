@@ -67,6 +67,7 @@ type Server struct {
 	Restore       bool          `json:"restore" yaml:"restore" env:"RESTORE"`
 	Key           string        `json:"key" env:"KEY"`
 	CryptoKey     string        `json:"crypto_key" env:"CRYPTO_KEY"`
+	TrustedSubnet string        `json:"trusted_subnet" env:"TRUSTED_SUBNET"`
 }
 
 type jsonServer struct {
@@ -254,6 +255,7 @@ func (c *Config) parseFlags(app string) string {
 		flag.StringVar(&c.Server.CryptoKey, "crypto-key", "", "private crypto key for tls")
 		flag.StringVar(&jsonConfigPath, "c", "", "json agent config path")
 		flag.StringVar(&jsonConfigPath, "config", "", "json agent config path")
+		flag.StringVar(&c.Server.TrustedSubnet, "t", "", "trusted subnet")
 	}
 
 	flag.Parse()

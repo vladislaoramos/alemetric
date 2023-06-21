@@ -10,6 +10,7 @@ import (
 	"encoding/pem"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"os"
 	"strings"
@@ -120,4 +121,35 @@ func loadPrivateKeyFromFile(path string) (*rsa.PrivateKey, error) {
 	}
 
 	return privateKey, nil
+}
+
+func trustedSubnet(cidr string) func(next http.Handler) http.Handler {
+	if cidr == "" {
+		return func(next http.Handler) http.Handler {
+			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				next.ServeHTTP(w, r)
+			})
+		}
+	}
+
+	_, trustedNetwork, err := net.ParseCIDR(cidr)
+	if err != nil {
+		return func(next http.Handler) http.Handler {
+			return http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				http.Error(w, "Trusted subnet contains invalid data", http.StatusInternalServerError)
+			})
+		}
+	}
+
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			agentIP := r.Header.Get("X-Real-IP")
+			ip := net.ParseIP(agentIP)
+			if !trustedNetwork.Contains(ip) {
+				http.Error(w, "No trusted subnet is specified", http.StatusForbidden)
+				return
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
 }

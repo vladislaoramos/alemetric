@@ -15,9 +15,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/vladislaoramos/alemetric/internal/usecase"
-	"github.com/vladislaoramos/alemetric/internal/usecase/mocks"
 	logger "github.com/vladislaoramos/alemetric/pkg/log"
 )
 
@@ -29,7 +27,7 @@ func NewTestServer(metricsStorage *repo.MetricsRepo, lgr *logger.Logger) TestSer
 	handler := chi.NewRouter()
 	mtOptions := make([]usecase.OptionFunc, 0)
 	mt := usecase.NewMetricsTool(metricsStorage, lgr, mtOptions...)
-	NewRouter(handler, mt, lgr, "")
+	NewRouter(handler, mt, lgr, "", "127.0.0.0/8")
 	ts := httptest.NewServer(handler)
 	return TestServer{
 		Server: ts,
@@ -55,9 +53,12 @@ func (s *TestServer) testRequest(
 	req, err := http.NewRequest(method, s.Server.URL+path, body)
 	require.NoError(t, err)
 
-	if body != nil {
-		req.Header.Add("Content-Type", "application/json")
-	}
+	//if body != nil {
+	//	req.Header.Add("Content-Type", "application/json")
+	//}
+
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("X-Real-IP", "127.0.0.1")
 
 	resp, err := http.DefaultClient.Do(req)
 	require.NoError(t, err)
@@ -68,21 +69,6 @@ func (s *TestServer) testRequest(
 	defer resp.Body.Close()
 
 	return resp.StatusCode, respBody
-}
-
-func metricsTool(t *testing.T) (*usecase.ToolUseCase, *mocks.MetricsRepo) {
-	log := testLogger()
-	mockCtl := gomock.NewController(t)
-	defer mockCtl.Finish()
-
-	mockRepo := mocks.NewMetricsRepo(t)
-
-	mockTool := usecase.NewMetricsTool(
-		mockRepo,
-		log,
-	)
-
-	return mockTool, mockRepo
 }
 
 func TestGetMetricsHandler(t *testing.T) {
