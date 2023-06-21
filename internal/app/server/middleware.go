@@ -128,7 +128,6 @@ func trustedSubnet(cidr string) func(next http.Handler) http.Handler {
 		return func(next http.Handler) http.Handler {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				next.ServeHTTP(w, r)
-				return
 			})
 		}
 	}
@@ -138,7 +137,6 @@ func trustedSubnet(cidr string) func(next http.Handler) http.Handler {
 		return func(next http.Handler) http.Handler {
 			return http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 				http.Error(w, "Trusted subnet contains invalid data", http.StatusInternalServerError)
-				return
 			})
 		}
 	}
