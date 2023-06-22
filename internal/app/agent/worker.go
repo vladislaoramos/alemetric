@@ -1,6 +1,7 @@
 package agent
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"strings"
@@ -66,6 +67,11 @@ func (w *Worker) SendMetrics(ticker *time.Ticker) {
 		var wg sync.WaitGroup
 		tasks := make(chan entity.Metrics)
 
+		disconnect, err := w.webAPI.Connect()
+		if err != nil {
+			w.l.Fatal(err.Error())
+		}
+
 		var workersNum int
 		if w.rateLimitCounter > 0 {
 			workersNum = int(w.rateLimitCounter)
@@ -123,6 +129,7 @@ func (w *Worker) SendMetrics(ticker *time.Ticker) {
 
 		close(tasks)
 		wg.Wait()
+		disconnect()
 	}
 }
 
@@ -139,7 +146,7 @@ func (w *Worker) sendMetrics(name, mType string, counter *entity.Counter, gauge 
 		g = *gauge
 	}
 
-	err := w.webAPI.SendMetrics(name, mType, counter, gauge)
+	err := w.webAPI.SendMetrics(context.Background(), name, mType, counter, gauge)
 	if err != nil {
 		w.l.Error(
 			fmt.Sprintf(

@@ -1,6 +1,7 @@
-package agent
+package sender
 
 import (
+	"context"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha512"
@@ -56,6 +57,7 @@ func splitHostPort(baseURL string) (host, port string, err error) {
 
 // SendMetrics sends a client request for a metrics update to the server.
 func (wc *WebAPIClient) SendMetrics(
+	_ context.Context,
 	metricsName,
 	metricsType string,
 	delta *entity.Counter,
@@ -109,7 +111,7 @@ func (wc *WebAPIClient) SendMetrics(
 }
 
 // SendSeveralMetrics sends a client request for several metrics update to the server.
-func (wc *WebAPIClient) SendSeveralMetrics(items []entity.Metrics) error {
+func (wc *WebAPIClient) SendSeveralMetrics(_ context.Context, items []entity.Metrics) error {
 	resp, err := wc.client.
 		R().
 		SetHeader("Content-Type", "application/json").
@@ -167,4 +169,8 @@ func loadPublicKeyFromFile(filePath string) (*rsa.PublicKey, error) {
 	}
 
 	return rsaPubKey, nil
+}
+
+func (wc *WebAPIClient) Connect() (func(), error) {
+	return func() {}, nil
 }

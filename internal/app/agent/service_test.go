@@ -1,6 +1,8 @@
 package agent
 
 import (
+	"context"
+	"github.com/vladislaoramos/alemetric/internal/app/agent/sender"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -17,17 +19,17 @@ func TestNewWebAPI(t *testing.T) {
 	tests := []struct {
 		name string
 		args *resty.Client
-		want *WebAPIClient
+		want *sender.WebAPIClient
 	}{
 		{
 			name: "simple test #1",
 			args: &resty.Client{},
-			want: &WebAPIClient{client: &resty.Client{}},
+			want: sender.NewWebAPI(&resty.Client{}, "", ""),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := NewWebAPI(tt.args, noEncryptionKey, "")
+			got := sender.NewWebAPI(tt.args, noEncryptionKey, "")
 			require.Equal(t, got, tt.want)
 		})
 	}
@@ -80,11 +82,11 @@ func TestWebAPI_SendMetric(t *testing.T) {
 				serverURL = testServer.URL
 			}
 
-			webAPI := &WebAPIClient{resty.New().SetBaseURL(serverURL), noEncryptionKey, ""}
+			webAPI := sender.NewWebAPI(resty.New().SetBaseURL(serverURL), noEncryptionKey, "")
 
 			val := entity.Gauge(tt.args.metricsValue)
 
-			err := webAPI.SendMetrics(tt.args.metricsName, tt.args.metricsType, nil, &val)
+			err := webAPI.SendMetrics(context.Background(), tt.args.metricsName, tt.args.metricsType, nil, &val)
 			if !tt.wantErr {
 				return
 			}
@@ -141,9 +143,9 @@ func TestWebAPI_SendSeveralMetric(t *testing.T) {
 				serverURL = testServer.URL
 			}
 
-			webAPI := &WebAPIClient{resty.New().SetBaseURL(serverURL), noEncryptionKey, ""}
+			webAPI := sender.NewWebAPI(resty.New().SetBaseURL(serverURL), noEncryptionKey, "")
 
-			err := webAPI.SendSeveralMetrics(tt.args)
+			err := webAPI.SendSeveralMetrics(context.Background(), tt.args)
 			if !tt.wantErr {
 				return
 			}

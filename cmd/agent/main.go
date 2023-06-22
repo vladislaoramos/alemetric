@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
+	"github.com/vladislaoramos/alemetric/internal/app/agent"
 	_ "net/http/pprof"
 	"os"
 
 	"github.com/vladislaoramos/alemetric/configs"
-	"github.com/vladislaoramos/alemetric/internal/app/agent"
 	logger "github.com/vladislaoramos/alemetric/pkg/log"
 )
 

@@ -47,6 +47,7 @@ type Agent struct {
 	Key            string        `json:"key" env:"KEY"`
 	RateLimit      uint          `json:"rate_limit" env:"RATE_LIMIT" env-default:"1"`
 	CryptoKey      string        `json:"crypto_key" env:"CRYPTO_KEY"`
+	UseGRPC        bool          `json:"use_grpc" env:"USE_GRPC"`
 }
 
 type jsonAgent struct {
@@ -68,6 +69,7 @@ type Server struct {
 	Key           string        `json:"key" env:"KEY"`
 	CryptoKey     string        `json:"crypto_key" env:"CRYPTO_KEY"`
 	TrustedSubnet string        `json:"trusted_subnet" env:"TRUSTED_SUBNET"`
+	UseGRPC       bool          `json:"use_grpc" env:"USE_GRPC"`
 }
 
 type jsonServer struct {
@@ -192,6 +194,10 @@ func (c *Config) updateAgentConfigs(v *Config) {
 	if v.Agent.CryptoKey != "" && c.Agent.CryptoKey != v.Agent.CryptoKey {
 		c.Agent.CryptoKey = v.Agent.CryptoKey
 	}
+
+	if c.Agent.UseGRPC != v.Agent.UseGRPC {
+		c.Agent.UseGRPC = v.Agent.UseGRPC
+	}
 }
 
 func (c *Config) updateServerConfigs(v *Config) {
@@ -230,6 +236,10 @@ func (c *Config) updateServerConfigs(v *Config) {
 	if v.Server.CryptoKey != "" && c.Server.CryptoKey != v.Server.CryptoKey {
 		c.Server.CryptoKey = v.Server.CryptoKey
 	}
+
+	if c.Server.UseGRPC != v.Server.UseGRPC {
+		c.Server.UseGRPC = v.Server.UseGRPC
+	}
 }
 
 func (c *Config) parseFlags(app string) string {
@@ -245,6 +255,7 @@ func (c *Config) parseFlags(app string) string {
 		flag.StringVar(&c.Agent.CryptoKey, "crypto-key", "", "public crypto key for https requests")
 		flag.StringVar(&jsonConfigPath, "c", "", "json agent config path")
 		flag.StringVar(&jsonConfigPath, "config", "", "json agent config path")
+		flag.BoolVar(&c.Agent.UseGRPC, "grpc", false, "use grpc")
 	case ServerConfig:
 		flag.StringVar(&c.Server.Address, "a", "", "server address")
 		flag.BoolVar(&c.Server.Restore, "r", true, "restore data from file")
@@ -256,6 +267,7 @@ func (c *Config) parseFlags(app string) string {
 		flag.StringVar(&jsonConfigPath, "c", "", "json agent config path")
 		flag.StringVar(&jsonConfigPath, "config", "", "json agent config path")
 		flag.StringVar(&c.Server.TrustedSubnet, "t", "", "trusted subnet")
+		flag.BoolVar(&c.Server.UseGRPC, "grpc", false, "use grpc")
 	}
 
 	flag.Parse()

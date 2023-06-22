@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package metrics;
+
+option go_package = ".;grpcTool";
+
+enum MetricsType {
+  UNKNOWN = 0;
+  GAUGE = 1;
+  COUNTER = 2;
+}
+
+message Metrics {
+  string id = 1;
+  MetricsType type = 2;
+  oneof payload {
+    int64 delta = 3;
+    double value = 4;
+  }
+  string hash = 5;
+}
