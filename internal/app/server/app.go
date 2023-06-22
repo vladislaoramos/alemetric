@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/vladislaoramos/alemetric/configs"
+	"github.com/vladislaoramos/alemetric/internal/app/server/grpc"
 	"github.com/vladislaoramos/alemetric/internal/repo"
 	"github.com/vladislaoramos/alemetric/internal/usecase"
 	logger "github.com/vladislaoramos/alemetric/pkg/log"
@@ -27,13 +28,17 @@ func Run(cfg *configs.Config, lgr *logger.Logger) {
 	}
 
 	mtOptions := make([]usecase.OptionFunc, 0)
+	grpcOpts := make([]grpc.OptionFunc, 0)
 	if cfg.Server.StoreInterval != 0 {
 		mtOptions = append(mtOptions, usecase.WriteFileWithDuration(cfg.Server.StoreInterval))
+		grpcOpts = append(grpcOpts, grpc.WriteFileWithDuration(cfg.Server.StoreInterval))
 	} else {
 		mtOptions = append(mtOptions, usecase.SyncWriteFile())
+		grpcOpts = append(grpcOpts, grpc.SyncWriteFile())
 	}
 	if cfg.Server.Key != "" {
 		mtOptions = append(mtOptions, usecase.CheckDataSign(cfg.Server.Key))
+		grpcOpts = append(grpcOpts, grpc.CheckDataSign(cfg.Server.Key))
 	}
 
 	var (
@@ -41,6 +46,7 @@ func Run(cfg *configs.Config, lgr *logger.Logger) {
 		db      *postgres.DB
 		err     error
 	)
+
 	if cfg.Database.URL != "" {
 		err := applyMigration(cfg.Database.URL)
 		if err != nil {
@@ -67,10 +73,11 @@ func Run(cfg *configs.Config, lgr *logger.Logger) {
 	handler := chi.NewRouter()
 
 	mt := usecase.NewMetricsTool(curRepo, lgr, mtOptions...)
-	NewRouter(handler, mt, lgr, cfg.Server.CryptoKey)
+	NewRouter(handler, mt, lgr, cfg.Server.CryptoKey, cfg.Server.TrustedSubnet)
 
 	var (
-		srv             = http.Server{Addr: cfg.Address, Handler: handler}
+		httpSrv         = http.Server{Addr: cfg.Address, Handler: handler}
+		grpcSrv         = grpc.NewServer(curRepo, lgr, grpcOpts...)
 		idleConnsClosed = make(chan struct{})
 		sigs            = make(chan os.Signal, 1)
 	)
@@ -79,15 +86,31 @@ func Run(cfg *configs.Config, lgr *logger.Logger) {
 
 	go func() {
 		<-sigs
-		if err = srv.Shutdown(context.Background()); err != nil {
+
+		grpcSrv.Server.GracefulStop()
+
+		if err = httpSrv.Shutdown(context.Background()); err != nil {
 			lgr.Error(fmt.Sprintf("http server shutdown: %v", err))
 		}
+
 		close(idleConnsClosed)
 	}()
 
-	if err = srv.ListenAndServe(); err != http.ErrServerClosed {
-		lgr.Fatal(err.Error())
-	}
+	go func() {
+		if err = httpSrv.ListenAndServe(); err != http.ErrServerClosed {
+			lgr.Fatal(err.Error())
+		}
+	}()
+
+	grpcPort := 3200
+
+	go func() {
+		err = grpcSrv.Start(grpcPort)
+		if err != nil {
+			lgr.Fatal(err.Error())
+		}
+	}()
 
 	<-idleConnsClosed
+	lgr.Info("Graceful Shutdown of the Server")
 }

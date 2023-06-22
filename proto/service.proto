@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package server;
+
+option go_package = ".;grpcTool";
+
+import "google/protobuf/empty.proto";
+import "proto/data.proto";
+
+service MetricsTool {
+  rpc GetMetricsNames(google.protobuf.Empty) returns (MetricsNames) {}
+  rpc StoreMetrics(metrics.Metrics) returns (google.protobuf.Empty) {}
+  rpc GetMetrics(metrics.Metrics) returns (MetricsResponse) {}
+}
+
+message MetricsNamesList {
+  repeated string items = 1;
+}
+
+message MetricsNames {
+  oneof response {
+    MetricsNamesList metrics = 1;
+    string error = 2;
+  }
+}
+
+message MetricsResponse {
+  oneof response {
+    metrics.Metrics metrics = 1;
+    string error = 2;
+  }
+}
+

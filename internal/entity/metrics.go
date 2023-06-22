@@ -6,6 +6,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"fmt"
+	grpcTool "github.com/vladislaoramos/alemetric/proto"
 	"log"
 	"strconv"
 )
@@ -87,4 +88,49 @@ func (m *Metrics) hash(key string) string {
 // CheckDataSign checks if a metrics is signed.
 func (m *Metrics) CheckDataSign(key string) bool {
 	return m.Hash == m.hash(key)
+}
+
+func (m *Metrics) AsProto() *grpcTool.Metrics {
+	var res grpcTool.Metrics
+
+	res.Id = m.ID
+	res.Type = m.TypeAsProto()
+	res.Hash = m.Hash
+
+	if m.Value != nil {
+		res.Payload = &grpcTool.Metrics_Value{Value: float64(*m.Value)}
+	} else if m.Delta != nil {
+		res.Payload = &grpcTool.Metrics_Delta{Delta: int64(*m.Delta)}
+	}
+
+	return &res
+}
+
+func (m *Metrics) TypeAsProto() grpcTool.MetricsType {
+	switch m.MType {
+	case gauge:
+		return grpcTool.MetricsType_GAUGE
+	case counter:
+		return grpcTool.MetricsType_COUNTER
+	default:
+		return grpcTool.MetricsType_UNKNOWN
+	}
+}
+
+func FromProto(m *grpcTool.Metrics) Metrics {
+	metrics := Metrics{
+		ID:    m.GetId(),
+		MType: m.GetType().String(),
+		Hash:  m.GetHash(),
+	}
+
+	if delta := m.GetDelta(); delta != 0 {
+		metrics.Delta = (*Counter)(&delta)
+	}
+
+	if value := m.GetValue(); value != 0 {
+		metrics.Value = (*Gauge)(&value)
+	}
+
+	return metrics
 }
